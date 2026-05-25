@@ -20,7 +20,7 @@
 
 ## 📱 下载
 
-前往 [Releases](https://github.com/etherealviator/CourseTable/releases) 下载最新 APK。
+👉 **[下载 APK (v1.0.0)](https://github.com/etherealviator/CourseTable/releases/download/v1.0.0/app-release.apk)**
 
 ## 🛠 技术栈
 
