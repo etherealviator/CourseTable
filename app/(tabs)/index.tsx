@@ -2,10 +2,10 @@ import React, { useEffect } from 'react';
 import { View, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useTimetable } from '../features/timetable/store';
-import { WeekHeader } from '../features/timetable/components/WeekHeader';
-import { TimetableGrid } from '../features/timetable/components/TimetableGrid';
-import type { Course } from '../shared/types';
+import { useTimetable } from '../../src/features/timetable/store';
+import { WeekHeader } from '../../src/features/timetable/components/WeekHeader';
+import { TimetableGrid } from '../../src/features/timetable/components/TimetableGrid';
+import type { Course } from '../../src/shared/types';
 
 export default function HomeScreen() {
   const router = useRouter();
