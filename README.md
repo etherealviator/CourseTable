@@ -1,56 +1,58 @@
-# 📅 课程表 (CourseTable)
+# 📅 CourseTable v2
 
-一个极简、纯净的课程表 Android 应用。**无广告 · 极速启动 · 一目了然**。
-
-> 灵感来自 WakeUp 课程表，只保留核心课程表功能，去除了广告和繁杂功能。
+极简课程表 Android 应用。无广告 · 秒开 · 专注课表本身。
 
 ## ✨ 功能
 
-- 📋 **周视图课程表** — 7天 × 12节 清晰网格布局，当前周高亮
-- 🎨 **非本周淡化** — 非本周课程自动淡色显示 + "非本周"标记
-- 📌 **顶部状态栏** — 实时显示第几周、星期几、月份日期
-- 🔄 **教务系统导入** — 登录教务系统自动抓取课程表
-  - 支持正方、青果、URP 等主流教务系统
-  - 智能解析 HTML 表格
-  - 自动裁剪只保留：课程名 + 教师 + 地点
-  - 自动校正时间对应节次
-- 🌗 **深色模式** — 自动跟随系统或手动切换
-- 🎯 **极简设计** — 无冗余功能，专注课程表本身
-- 🚀 **极速启动** — Expo 优化，秒开
-
-## 📱 下载
-
-👉 **[下载 APK (v1.0.0)](https://github.com/etherealviator/CourseTable/releases/download/v1.0.0/app-release.apk)**
+- 📋 **周视图课程表** — 7天×12节网格，当前周高亮，非本周淡化
+- ➕ **手动添加课程** — 课程名、教师、地点、周次、节次、自定义颜色
+- 🔄 **教务系统导入** — 登录正方/青果/URP 等教务系统自动抓取，支持粘贴 HTML 解析
+- 🏫 **130+ 学校内置** — 覆盖全国高校教务系统地址，远程更新
+- 🌗 **深色模式** — 一键切换
+- 🧩 **模块化架构** — Zustand 状态管理，features/shared 分离，parser 四策略可扩展
 
 ## 🛠 技术栈
 
-- React Native + Expo SDK 56
-- Expo Router (文件路由)
-- React Native Paper (UI)
-- AsyncStorage (本地存储)
-- WebView (教务系统抓取)
+| 层 | 选型 |
+|---|------|
+| 框架 | React Native + Expo SDK 56 |
+| 状态管理 | Zustand |
+| UI | React Native Paper |
+| 路由 | Expo Router v4 |
+| 存储 | AsyncStorage |
+| 解析 | 自研四策略 HTML Parser（Table/Div/JSON/Grid） |
 
 ## 🏗 本地构建
 
 ```bash
-# 安装依赖
-npm install
-
-# 启动开发
-npm start
-
-# 构建 APK (需要 Expo 账号)
-npm install -g eas-cli
-eas build --platform android --profile production
+npm install --legacy-peer-deps
+npx expo start        # 开发调试
+npx expo prebuild --platform android
+cd android && ./gradlew assembleRelease   # APK
 ```
 
-## 📖 使用说明
+## 📱 下载
 
-1. **添加课程** — 点击右下角 + 手动添加课程
-2. **导入课表** — 设置 → 从教务系统导入 → 登录教务系统 → 抓取课表
-3. **切换周次** — 课程表顶部左右箭头切换周次
-4. **编辑课程** — 点击课程卡片查看/编辑详情
+👉 [最新 APK](https://github.com/etherealviator/CourseTable/releases)
 
-## 📄 License
+或查看 [Actions](https://github.com/etherealviator/CourseTable/actions) 下载最新构建产物。
+
+## 📂 目录结构
+
+```
+src/
+├── features/
+│   ├── timetable/     # 课表核心 (store + 组件)
+│   ├── import/        # 教务导入 (parser 四策略 + 学校库)
+│   └── settings/      # 设置
+├── shared/            # 跨模块共享
+│   ├── types/         # 类型定义
+│   ├── storage/       # 持久化
+│   ├── utils/         # 时间/工具
+│   └── constants/     # 主题/常量
+└── app/               # Expo Router 页面
+```
+
+## License
 
 MIT
