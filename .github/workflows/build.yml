@@ -6,42 +6,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Generate native Android project
-        run: npx expo prebuild --platform android --no-install
+          node-version: 22
 
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Gradle
-        working-directory: android
-        run: |
-          echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> gradle.properties
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Export check
+        run: npx expo export --platform android --dump-sourcemap
 
       - name: Build APK
-        working-directory: android
-        run: |
-          set -o pipefail
-          ./gradlew assembleRelease --no-daemon --info 2>&1 | tail -500
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
-          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: course-table-apk
-          path: android/app/build/outputs/apk/release/*.apk
+        run: npx expo run:android --variant release --no-build-cache
