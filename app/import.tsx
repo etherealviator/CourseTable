@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
-import { useTimetable } from '../../src/features/timetable/store';
-import { parseCourseTable, parseGridData } from '../../src/features/import/parser';
-import { searchSchools, loadSchools, SchoolEntry } from '../../src/features/import/schools';
-import { generateId } from '../../src/shared/utils/time';
-import { COURSE_COLORS } from '../../src/shared/constants/theme';
+import { useTimetable } from '../src/features/timetable/store';
+import { parseCourseTable, parseGridData } from '../src/features/import/parser';
+import { searchSchools, loadSchools, SchoolEntry } from '../src/features/import/schools';
+import { generateId } from '../src/shared/utils/time';
+import { COURSE_COLORS } from '../src/shared/constants/theme';
 
 export default function ImportScreen() {
   const router = useRouter();
