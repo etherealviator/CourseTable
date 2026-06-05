@@ -39,7 +39,7 @@ export default function AddCourseScreen() {
         ['开始节次 (1-12)', startP, setStartP, 'numeric'],
         ['结束节次 (1-12)', endP, setEndP, 'numeric'],
         ['周次 (逗号分隔)', weeks, setWeeks, 'default'],
-      ].map((([label, value, setter, kt]: [string, string, (v: string) => void, string]) => (
+      ].map(([label, value, setter, kt]: [string, string, (v: string) => void, string]) => (
         <View key={label as string} style={{ marginBottom: 14 }}>
           <Text style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>{label}</Text>
           <TextInput

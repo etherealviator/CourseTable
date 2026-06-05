@@ -61,7 +61,7 @@ export default function CourseDetailScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentContainerStyle={{ padding: 16 }}>
-      {fields.map((([label, value, kt, setter]: [string, string, string, (v: string) => void]) => (
+      {fields.map(([label, value, kt, setter]: [string, string, string, (v: string) => void]) => (
         <View key={label} style={{ marginBottom: 14 }}>
           <Text style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>{label}</Text>
           <TextInput
