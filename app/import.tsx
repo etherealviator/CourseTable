@@ -1,460 +1,199 @@
-// 教务系统导入页面
-// WebView 登录教务系统 → 自动抓取课程表 → 智能解析裁剪
-
-import React, { useState, useRef, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TextInput,
-  TouchableOpacity, Alert, ActivityIndicator, useColorScheme,
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { Button, SegmentedButtons } from 'react-native-paper';
-import { useCourses } from '../src/hooks/useCourses';
-import { Course, ParsedCourse, EduSystemType } from '../src/types';
-import { EDU_TEMPLATES, parseCourseTable } from '../src/utils/parser';
-import { COURSE_COLORS } from '../src/constants/theme';
-import { generateId } from '../src/utils/time';
+import { useRouter } from 'expo-router';
+import { useTimetable } from '../../src/features/timetable/store';
+import { parseCourseTable, parseGridData } from '../../src/features/import/parser';
+import { searchSchools, loadSchools, SchoolEntry } from '../../src/features/import/schools';
+import { generateId } from '../../src/shared/utils/time';
+import { COURSE_COLORS } from '../../src/shared/constants/theme';
 
 export default function ImportScreen() {
   const router = useRouter();
-  const isDark = useColorScheme() === 'dark';
-  const { importCourses } = useCourses();
-
-  const [mode, setMode] = useState<'webview' | 'paste'>('webview');
+  const { importCourses } = useTimetable();
   const [url, setUrl] = useState('');
-  const [htmlText, setHtmlText] = useState('');
-  const [parsing, setParsing] = useState(false);
-  const [parsedCourses, setParsedCourses] = useState<ParsedCourse[]>([]);
-  const [selectedCourses, setSelectedCourses] = useState<Set<number>>(new Set());
-  const [webViewVisible, setWebViewVisible] = useState(false);
+  const [showWebView, setShowWebView] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [schoolQuery, setSchoolQuery] = useState('');
+  const [matchedSchools, setMatchedSchools] = useState<SchoolEntry[]>([]);
+  const [htmlInput, setHtmlInput] = useState('');
+  const [mode, setMode] = useState<'url' | 'paste'>('url');
 
-  const webViewRef = useRef<WebView>(null);
-
-  const colors = {
-    bg: isDark ? '#000000' : '#F5F5F7',
-    surface: isDark ? '#1C1C1E' : '#FFFFFF',
-    text: isDark ? '#FFFFFF' : '#1C1C1E',
-    sub: isDark ? '#98989D' : '#8E8E93',
-    border: isDark ? '#38383A' : '#E5E5EA',
-    primary: '#4A90D9',
-    green: '#34C759',
+  const handleSearch = async (q: string) => {
+    setSchoolQuery(q);
+    const schools = await loadSchools();
+    setMatchedSchools(searchSchools(q, schools));
   };
 
-  // 注入 JS 用于抓取页面 HTML
-  const injectedJS = `
-    (function() {
-      // 等待页面加载完成
-      setTimeout(function() {
-        var html = document.documentElement.outerHTML;
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'html',
-          content: html,
-          url: window.location.href,
-          title: document.title
-        }));
-      }, 2000);
-    })();
-  `;
-
-  const handleWebViewMessage = useCallback((event: { nativeEvent: { data: string } }) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'html' && data.content) {
-        setParsing(true);
-        // 解析 HTML
-        setTimeout(() => {
-          const courses = parseCourseTable(data.content);
-          setParsedCourses(courses);
-          setSelectedCourses(new Set(courses.map((_c: ParsedCourse, i: number) => i)));
-          setParsing(false);
-          setWebViewVisible(false);
-        }, 500);
-      }
-    } catch (e) {
-      console.warn('Parse message error:', e);
-    }
-  }, []);
-
-  const handlePasteParse = () => {
-    if (!htmlText.trim()) {
-      Alert.alert('提示', '请先粘贴课程表 HTML 代码');
-      return;
-    }
-
-    setParsing(true);
-    setTimeout(() => {
-      const courses = parseCourseTable(htmlText);
-      setParsedCourses(courses);
-      setSelectedCourses(new Set(courses.map((_c: ParsedCourse, i: number) => i)));
-      setParsing(false);
-    }, 300);
-  };
-
-  const toggleCourse = (idx: number) => {
-    const next = new Set(selectedCourses);
-    if (next.has(idx)) {
-      next.delete(idx);
-    } else {
-      next.add(idx);
-    }
-    setSelectedCourses(next);
-  };
-
-  const handleImport = async () => {
-    const selected = parsedCourses.filter((_c: ParsedCourse, i: number) => selectedCourses.has(i));
-    if (selected.length === 0) {
-      Alert.alert('提示', '请至少选择一门课程');
-      return;
-    }
-
-    const newCourses: Course[] = selected.map((pc, i) => {
-      // 解析节次
-      let startPeriod = 1;
-      let endPeriod = 2;
-      if (pc.periods) {
-        const parts = pc.periods.split(/[-~]/).map(Number);
-        if (parts.length === 2) {
-          startPeriod = Math.min(parts[0], parts[1]);
-          endPeriod = Math.max(parts[0], parts[1]);
-        }
-      }
-
-      // 解析周次
-      const weeks: number[] = [];
-      if (pc.weeks) {
-        const weekParts = pc.weeks.split(/[-~]/);
-        if (weekParts.length === 2) {
-          const start = parseInt(weekParts[0]);
-          const end = parseInt(weekParts[1]);
-          if (start && end) {
-            for (let w = Math.min(start, end); w <= Math.max(start, end); w++) {
-              weeks.push(w);
-            }
+  const handleImportFromHtml = (html: string) => {
+    setLoading(true);
+    const parsed = parseCourseTable(html);
+    if (parsed.length === 0) {
+      try {
+        const data = JSON.parse(html);
+        if (Array.isArray(data)) {
+          const parsed2 = parseGridData(data);
+          if (parsed2.length > 0) {
+            importWithColors(parsed2);
+            return;
           }
         }
-      }
-      if (weeks.length === 0) {
-        for (let w = 1; w <= 18; w++) weeks.push(w);
-      }
+      } catch {}
+      alert('未识别到课程数据，请确认粘贴的是课程表HTML');
+      setLoading(false);
+      return;
+    }
+    importWithColors(parsed);
+  };
 
+  const importWithColors = (parsed: { name: string; teacher: string; location: string; dayOfWeek: number; periods: string; weeks: string }[]) => {
+    const courses = parsed.map(p => {
+      const [start, end] = (p.periods || '1-2').split('-').map(Number);
+      const weeks = parseWeeks(p.weeks);
       return {
         id: generateId(),
-        name: pc.name,
-        teacher: pc.teacher,
-        location: pc.location,
-        dayOfWeek: pc.dayOfWeek || 1,
-        startPeriod,
-        endPeriod,
-        weeks,
-        color: COURSE_COLORS[i % COURSE_COLORS.length],
+        name: p.name,
+        teacher: p.teacher,
+        location: p.location,
+        dayOfWeek: p.dayOfWeek || 1,
+        startPeriod: start || 1,
+        endPeriod: end || 2,
+        weeks: weeks.length > 0 ? weeks : Array.from({ length: 18 }, (_, i) => i + 1),
+        color: COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)],
       };
     });
-
-    await importCourses(newCourses);
-    Alert.alert('导入成功', `已导入 ${newCourses.length} 门课程`, [
-      { text: '好的', onPress: () => router.back() },
-    ]);
+    importCourses(courses);
+    setLoading(false);
+    router.back();
   };
-
-  const handleCaptureHtml = () => {
-    webViewRef.current?.injectJavaScript(`
-      (function() {
-        var html = document.documentElement.outerHTML;
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'html',
-          content: html,
-          url: window.location.href,
-          title: document.title
-        }));
-      })();
-      true;
-    `);
-    setParsing(true);
-  };
-
-  // WebView 模式
-  if (webViewVisible) {
-    const targetUrl = url || 'https://www.baidu.com';
-    return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
-        <View style={styles.webviewHeader}>
-          <TouchableOpacity onPress={() => setWebViewVisible(false)}>
-            <Text style={[styles.backBtn, { color: colors.primary }]}>取消</Text>
-          </TouchableOpacity>
-          <Text style={[styles.webviewTitle, { color: colors.text }]} numberOfLines={1}>
-            登录教务系统
-          </Text>
-          <TouchableOpacity onPress={handleCaptureHtml}>
-            <Text style={[styles.captureBtn, { color: colors.green }]}>
-              {parsing ? '解析中...' : '抓取课表'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <WebView
-          ref={webViewRef}
-          source={{ uri: targetUrl }}
-          style={styles.webview}
-          onMessage={handleWebViewMessage}
-          javaScriptEnabled
-          domStorageEnabled
-          startInLoadingState
-          renderLoading={() => (
-            <View style={styles.loading}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={[styles.loadingText, { color: colors.sub }]}>加载中...</Text>
-            </View>
-          )}
-        />
-        {parsing && (
-          <View style={styles.parsingOverlay}>
-            <ActivityIndicator size="large" color="#FFF" />
-            <Text style={styles.parsingText}>正在解析课程表...</Text>
-          </View>
-        )}
-      </View>
-    );
-  }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.bg }]}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* 导入方式选择 */}
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>导入方式</Text>
-      <SegmentedButtons
-        value={mode}
-        onValueChange={(v) => setMode(v as 'webview' | 'paste')}
-        buttons={[
-          { value: 'webview', label: '教务系统登录' },
-          { value: 'paste', label: '粘贴HTML' },
-        ]}
-        style={styles.segment}
-      />
-
-      {mode === 'webview' ? (
-        <View>
-          <Text style={[styles.label, { color: colors.sub }]}>教务系统地址</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-            value={url}
-            onChangeText={setUrl}
-            placeholder="输入教务系统网址（或留空手动输入）"
-            placeholderTextColor={colors.sub}
-            autoCapitalize="none"
-            keyboardType="url"
-          />
-          <Text style={[styles.hintText, { color: colors.sub }]}>
-            登录教务系统后，导航到课程表页面，点击右上角「抓取课表」按钮
-          </Text>
-          <Button
-            mode="contained"
-            onPress={() => setWebViewVisible(true)}
-            style={styles.actionBtn}
-            buttonColor={colors.primary}
-            textColor="#FFF"
-          >
-            打开教务系统
-          </Button>
-        </View>
-      ) : (
-        <View>
-          <Text style={[styles.label, { color: colors.sub }]}>粘贴课程表 HTML</Text>
-          <TextInput
-            style={[styles.htmlInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
-            value={htmlText}
-            onChangeText={setHtmlText}
-            placeholder="在教务系统课程表页面右键→查看网页源代码→复制 HTML→粘贴到这里"
-            placeholderTextColor={colors.sub}
-            multiline
-            textAlignVertical="top"
-          />
-          <Button
-            mode="contained"
-            onPress={handlePasteParse}
-            style={styles.actionBtn}
-            buttonColor={colors.primary}
-            textColor="#FFF"
-            loading={parsing}
-          >
-            解析课程表
-          </Button>
-        </View>
-      )}
-
-      {/* 解析结果 */}
-      {parsing && (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.sub }]}>正在解析...</Text>
-        </View>
-      )}
-
-      {parsedCourses.length > 0 && (
-        <View style={styles.resultSection}>
-          <View style={styles.resultHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              解析结果 ({parsedCourses.length} 门)
-            </Text>
+    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentContainerStyle={{ padding: 16 }}>
+      {!showWebView ? (
+        <>
+          <View style={{ flexDirection: 'row', marginBottom: 16, gap: 8 }}>
             <TouchableOpacity
-              onPress={() => {
-                if (selectedCourses.size === parsedCourses.length) {
-                  setSelectedCourses(new Set());
-                } else {
-                  setSelectedCourses(new Set(parsedCourses.map((_c: ParsedCourse, i: number) => i)));
-                }
-              }}
+              onPress={() => setMode('url')}
+              style={{ flex: 1, backgroundColor: mode === 'url' ? '#3B82F6' : '#eee', borderRadius: 8, padding: 10, alignItems: 'center' }}
             >
-              <Text style={[styles.selectAll, { color: colors.primary }]}>
-                {selectedCourses.size === parsedCourses.length ? '取消全选' : '全选'}
-              </Text>
+              <Text style={{ color: mode === 'url' ? '#fff' : '#666', fontWeight: '600' }}>教务系统登录</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setMode('paste')}
+              style={{ flex: 1, backgroundColor: mode === 'paste' ? '#3B82F6' : '#eee', borderRadius: 8, padding: 10, alignItems: 'center' }}
+            >
+              <Text style={{ color: mode === 'paste' ? '#fff' : '#666', fontWeight: '600' }}>粘贴HTML</Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.hintText, { color: colors.sub, marginBottom: 8 }]}>
-            已自动裁剪只保留课程名、教师、地点。点击选择要导入的课程。
-          </Text>
-
-          {parsedCourses.map((course, idx) => {
-            const selected = selectedCourses.has(idx);
-            return (
+          {mode === 'url' ? (
+            <>
+              <Text style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>搜索学校或直接输入教务系统地址</Text>
+              <TextInput
+                value={schoolQuery}
+                onChangeText={handleSearch}
+                placeholder="搜索学校名称..."
+                style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 15, marginBottom: 8 }}
+              />
+              {matchedSchools.slice(0, 10).map(s => (
+                <TouchableOpacity
+                  key={s.name}
+                  onPress={() => { setUrl(s.urls[0]); setSchoolQuery(s.name); }}
+                  style={{ padding: 10, borderBottomWidth: 1, borderColor: '#f0f0f0' }}
+                >
+                  <Text style={{ fontSize: 14 }}>{s.name} <Text style={{ color: '#aaa', fontSize: 12 }}>{s.province}</Text></Text>
+                  <Text style={{ fontSize: 11, color: '#3B82F6' }}>{s.urls[0]}</Text>
+                </TouchableOpacity>
+              ))}
+              <TextInput
+                value={url}
+                onChangeText={setUrl}
+                placeholder="或直接粘贴教务系统地址"
+                style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 15, marginTop: 8, marginBottom: 12 }}
+              />
               <TouchableOpacity
-                key={idx}
-                style={[
-                  styles.resultItem,
-                  { backgroundColor: colors.surface, borderColor: selected ? colors.primary : colors.border },
-                ]}
-                onPress={() => toggleCourse(idx)}
+                onPress={() => url && setShowWebView(true)}
+                style={{ backgroundColor: '#3B82F6', borderRadius: 8, padding: 14, alignItems: 'center' }}
               >
-                <View style={styles.checkbox}>
-                  <View style={[
-                    styles.checkboxInner,
-                    selected && { backgroundColor: colors.primary },
-                    { borderColor: selected ? colors.primary : colors.sub },
-                  ]}>
-                    {selected && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                </View>
-                <View style={styles.resultInfo}>
-                  <Text style={[styles.resultName, { color: colors.text }]}>{course.name}</Text>
-                  <Text style={[styles.resultMeta, { color: colors.sub }]}>
-                    {course.teacher ? `${course.teacher} · ` : ''}
-                    {course.location || '未指定地点'}
-                  </Text>
-                  <Text style={[styles.resultMeta, { color: colors.sub }]}>
-                    周{course.dayOfWeek || '?'}
-                    {course.periods ? ` ${course.periods}节` : ''}
-                    {course.weeks ? ` · 第${course.weeks}周` : ''}
-                  </Text>
-                </View>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>打开教务系统</Text>
               </TouchableOpacity>
-            );
-          })}
-
-          <Button
-            mode="contained"
-            onPress={handleImport}
-            style={styles.importBtn}
-            buttonColor="#34C759"
-            textColor="#FFF"
-          >
-            导入选中的 {selectedCourses.size} 门课程
-          </Button>
+            </>
+          ) : (
+            <>
+              <Text style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>粘贴课程表页面的 HTML 源码</Text>
+              <TextInput
+                value={htmlInput}
+                onChangeText={setHtmlInput}
+                multiline
+                numberOfLines={10}
+                placeholder="<table>...</table>"
+                style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 13, minHeight: 150, textAlignVertical: 'top', marginBottom: 12 }}
+              />
+              <TouchableOpacity
+                onPress={() => htmlInput && handleImportFromHtml(htmlInput)}
+                style={{ backgroundColor: '#3B82F6', borderRadius: 8, padding: 14, alignItems: 'center' }}
+              >
+                <Text style={{ color: '#fff', fontWeight: '700' }}>解析并导入</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </>
+      ) : (
+        <View style={{ flex: 1, minHeight: 600 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <TouchableOpacity onPress={() => setShowWebView(false)}>
+              <Text style={{ color: '#3B82F6', fontSize: 15 }}>← 返回</Text>
+            </TouchableOpacity>
+          </View>
+          {loading && <ActivityIndicator style={{ marginBottom: 8 }} />}
+          <WebView
+            source={{ uri: url }}
+            style={{ flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 8 }}
+            javaScriptEnabled
+            domStorageEnabled
+            onNavigationStateChange={(nav) => {
+              if (nav.title && /课程表|课表|schedule|timetable/i.test(nav.title)) {
+                // 可能到了课表页面，尝试抓取
+              }
+            }}
+            injectedJavaScript={`
+              setTimeout(() => {
+                const tables = document.querySelectorAll('table');
+                if (tables.length > 0) {
+                  const html = tables[0].outerHTML || document.body.innerHTML;
+                  window.ReactNativeWebView.postMessage(html);
+                }
+              }, 3000);
+              true;
+            `}
+            onMessage={(e) => {
+              const html = e.nativeEvent.data;
+              if (html && html.includes('<table')) {
+                handleImportFromHtml(html);
+              }
+            }}
+          />
         </View>
       )}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 10 },
-  segment: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-  },
-  htmlInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 13,
-    minHeight: 150,
-    fontFamily: 'monospace',
-  },
-  hintText: { fontSize: 12, marginTop: 6, lineHeight: 18 },
-  actionBtn: { marginTop: 14, borderRadius: 10 },
-  loadingBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    gap: 8,
-  },
-  loadingText: { fontSize: 14 },
-  resultSection: { marginTop: 24 },
-  resultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  selectAll: { fontSize: 14, fontWeight: '600' },
-  resultItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: 1.5,
-    padding: 12,
-    marginBottom: 8,
-  },
-  checkbox: { marginRight: 12 },
-  checkboxInner: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmark: { color: '#FFF', fontSize: 14, fontWeight: '700' },
-  resultInfo: { flex: 1 },
-  resultName: { fontSize: 15, fontWeight: '600' },
-  resultMeta: { fontSize: 12, marginTop: 2 },
-  importBtn: { marginTop: 16, borderRadius: 10 },
-  // WebView 样式
-  webviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: 48,
-  },
-  backBtn: { fontSize: 16 },
-  webviewTitle: { fontSize: 16, fontWeight: '600', flex: 1, textAlign: 'center' },
-  captureBtn: { fontSize: 16, fontWeight: '600' },
-  webview: { flex: 1 },
-  loading: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  parsingOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  parsingText: { color: '#FFF', fontSize: 16, marginTop: 12 },
-});
+function parseWeeks(s: string): number[] {
+  if (!s) return [];
+  const single = s.match(/单周/);
+  const weeks: number[] = [];
+  const range = s.match(/(\d+)[-~](\d+)/);
+  if (range) {
+    for (let i = Number(range[1]); i <= Number(range[2]); i++) {
+      if (single && i % 2 === 0) continue;
+      if (!single && s.includes('双') && i % 2 === 1) continue;
+      weeks.push(i);
+    }
+  }
+  if (weeks.length === 0) {
+    const n = parseInt(s);
+    if (n > 0 && n <= 20) weeks.push(n);
+  }
+  return weeks.length > 0 ? weeks : Array.from({ length: 18 }, (_, i) => i + 1);
+}

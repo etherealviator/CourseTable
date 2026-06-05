@@ -1,20 +1,22 @@
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useTimetable } from '../features/timetable/store';
 import { WeekHeader } from '../features/timetable/components/WeekHeader';
 import { TimetableGrid } from '../features/timetable/components/TimetableGrid';
 import type { Course } from '../shared/types';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { courses, currentWeek, loaded, init, setWeek } = useTimetable();
 
   useEffect(() => { init(); }, []);
 
   if (!loaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#3B82F6" />
       </View>
     );
   }
@@ -29,10 +31,21 @@ export default function HomeScreen() {
       <TimetableGrid
         courses={courses}
         currentWeek={currentWeek}
-        onCoursePress={(c: Course) => {
-          // 将在后续实现课程详情导航
-        }}
+        onCoursePress={(c: Course) => router.push({ pathname: '/course-detail', params: { id: c.id } })}
       />
+
+      {/* FAB */}
+      <TouchableOpacity
+        onPress={() => router.push('/course/add')}
+        style={{
+          position: 'absolute', bottom: 24, right: 20,
+          width: 56, height: 56, borderRadius: 28,
+          backgroundColor: '#3B82F6', alignItems: 'center', justifyContent: 'center',
+          elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 28, lineHeight: 30 }}>+</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
