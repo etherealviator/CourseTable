@@ -35,7 +35,7 @@ jobs:
         working-directory: android
         run: |
           set -o pipefail
-          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tail -300
+          ./gradlew assembleRelease --no-daemon --info 2>&1 | tail -500
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
