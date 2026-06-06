@@ -28,7 +28,10 @@ jobs:
 
       - name: Setup Gradle
         working-directory: android
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
           echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> gradle.properties
 
       - name: Build release APK
