@@ -17,6 +17,9 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Check Metro bundling
+        run: npx expo export --platform android --dump-sourcemap 2>&1 | tail -80
+
       - name: Generate native Android project
         run: npx expo prebuild --platform android --no-install
 
@@ -35,7 +38,7 @@ jobs:
         working-directory: android
         run: |
           set -o pipefail
-          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tail -300
+          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
