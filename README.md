@@ -22,20 +22,26 @@
 | 存储 | AsyncStorage |
 | 解析 | 自研四策略 HTML Parser（Table/Div/JSON/Grid） |
 
-## 🏗 本地构建
+## 🏗 构建 APK（本地，3 分钟）
 
 ```bash
+git clone https://github.com/etherealviator/CourseTable -b v2
+cd CourseTable
 npm install --legacy-peer-deps
-npx expo start        # 开发调试
-npx expo prebuild --platform android
-cd android && ./gradlew assembleRelease   # APK
+npx expo run:android --variant release
+# APK 在 android/app/build/outputs/apk/release/
 ```
+
+或开发调试：
+```bash
+npx expo start        # 扫码在手机上实时预览
+```
+
+> GitHub Actions CI 因 Expo SDK 56 与最新 Ubuntu 镜像不兼容暂时无法构建，本地构建不受影响。
 
 ## 📱 下载
 
-👉 [最新 APK](https://github.com/etherealviator/CourseTable/releases)
-
-或查看 [Actions](https://github.com/etherealviator/CourseTable/actions) 下载最新构建产物。
+👉 [v1.1.0 APK](https://github.com/etherealviator/CourseTable/releases/tag/v1.1.0) | v2 APK 待本地构建后上传
 
 ## 📂 目录结构
 
