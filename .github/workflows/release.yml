@@ -1,13 +1,13 @@
-name: Build APK
+name: Release APK
 on:
   push:
-    branches: [main, master, v2]
     tags: ['v*']
-  workflow_dispatch:
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -28,8 +28,7 @@ jobs:
 
       - name: Setup Gradle
         working-directory: android
-        run: |
-          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> gradle.properties
+        run: echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> gradle.properties
 
       - name: Build release APK
         working-directory: android
@@ -38,8 +37,8 @@ jobs:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: course-table-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          files: android/app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
