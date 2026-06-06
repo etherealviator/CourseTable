@@ -28,7 +28,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build APK
-        run: npx expo run:android --variant release
+        run: npx expo run:android --variant release --device generic
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
