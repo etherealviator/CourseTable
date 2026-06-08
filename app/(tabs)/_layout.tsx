@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 
 function TabIcon({ name, label, focused, color }: { name: string; label: string; focused: boolean; color: import('react-native').ColorValue }) {
   const icons: Record<string, string> = {
@@ -19,19 +19,21 @@ function TabIcon({ name, label, focused, color }: { name: string; label: string;
 }
 
 export default function TabLayout() {
+  const isDark = useColorScheme() === 'dark';
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E5EA',
+          backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+          borderTopColor: isDark ? '#38383A' : '#E5E5EA',
           height: 56,
           paddingBottom: 6,
           paddingTop: 4,
         },
         tabBarActiveTintColor: '#4A90D9',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarInactiveTintColor: isDark ? '#98989D' : '#8E8E93',
         tabBarShowLabel: false,
       }}
     >

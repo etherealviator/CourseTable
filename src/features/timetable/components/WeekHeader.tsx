@@ -5,12 +5,14 @@ import { WEEKDAY_NAMES } from '../../../shared/utils/time';
 
 interface Props {
   currentWeek: number;
+  showWeekends: boolean;
   onPrev: () => void;
   onNext: () => void;
 }
 
-export function WeekHeader({ currentWeek, onPrev, onNext }: Props) {
+export function WeekHeader({ currentWeek, showWeekends, onPrev, onNext }: Props) {
   const insets = useSafeAreaInsets();
+  const days = showWeekends ? WEEKDAY_NAMES : WEEKDAY_NAMES.slice(0, 5);
 
   return (
     <View style={{ paddingTop: insets.top + 4, paddingBottom: 8, paddingHorizontal: 16 }}>
@@ -24,7 +26,7 @@ export function WeekHeader({ currentWeek, onPrev, onNext }: Props) {
         </TouchableOpacity>
       </View>
       <View style={{ flexDirection: 'row' }}>
-        {WEEKDAY_NAMES.map((name, i) => (
+        {days.map((name, i) => (
           <View key={i} style={{ flex: 1, alignItems: 'center' }}>
             <Text style={{ fontSize: 12, color: '#888' }}>{name}</Text>
           </View>

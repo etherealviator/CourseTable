@@ -158,18 +158,53 @@ export default function ImportScreen() {
             }}
             injectedJavaScript={`
               setTimeout(() => {
-                const tables = document.querySelectorAll('table');
-                if (tables.length > 0) {
-                  const html = tables[0].outerHTML || document.body.innerHTML;
-                  window.ReactNativeWebView.postMessage(html);
+                try {
+                  var gridTables = document.querySelectorAll('.ui-jqgrid-btable');
+                  if (gridTables.length > 0) {
+                    var rows = gridTables[0].querySelectorAll('tbody tr');
+                    var data = [];
+                    for (var r = 0; r < rows.length; r++) {
+                      var cells = rows[r].querySelectorAll('td');
+                      if (cells.length > 0) {
+                        var row = {};
+                        for (var c = 0; c < cells.length; c++) {
+                          row['col' + c] = cells[c].textContent.trim();
+                        }
+                        data.push(row);
+                      }
+                    }
+                    if (data.length > 0) {
+                      window.ReactNativeWebView.postMessage('__JQGRID__' + JSON.stringify(data));
+                      return;
+                    }
+                  }
+                } catch(e) {}
+                // fallback: 抓取所有表格 HTML
+                var allHtml = '';
+                var tables = document.querySelectorAll('table');
+                for (var i = 0; i < tables.length; i++) {
+                  allHtml += tables[i].outerHTML + '\\n<hr>\\n';
                 }
-              }, 3000);
+                window.ReactNativeWebView.postMessage(allHtml || document.body.innerHTML);
+              }, 5000);
               true;
             `}
             onMessage={(e) => {
-              const html = e.nativeEvent.data;
-              if (html && html.includes('<table')) {
-                handleImportFromHtml(html);
+              const data = e.nativeEvent.data;
+              if (data.startsWith('__JQGRID__')) {
+                try {
+                  const gridData = JSON.parse(data.slice(9));
+                  const parsed = parseGridData(gridData);
+                  if (parsed.length > 0) {
+                    importWithColors(parsed);
+                    return;
+                  }
+                } catch(e) {}
+              }
+              if (data && (data.includes('<table') || data.includes('<tr'))) {
+                handleImportFromHtml(data);
+              } else {
+                alert('未识别到课程数据，请确认当前页面是课程表页面');
               }
             }}
           />

@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTimetable } from '../../src/features/timetable/store';
 
 export default function AddCourseScreen() {
   const router = useRouter();
   const { addCourse } = useTimetable();
+  const params = useLocalSearchParams<{ dayOfWeek?: string; startPeriod?: string; endPeriod?: string }>();
   const [name, setName] = useState('');
   const [teacher, setTeacher] = useState('');
   const [location, setLocation] = useState('');
-  const [day, setDay] = useState('1');
-  const [startP, setStartP] = useState('1');
-  const [endP, setEndP] = useState('2');
+  const [day, setDay] = useState(params.dayOfWeek || '1');
+  const [startP, setStartP] = useState(params.startPeriod || '1');
+  const [endP, setEndP] = useState(params.endPeriod || '2');
   const [weeks, setWeeks] = useState('1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18');
 
   const handleAdd = () => {

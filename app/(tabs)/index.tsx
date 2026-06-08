@@ -9,7 +9,8 @@ import type { Course } from '../../src/shared/types';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { courses, currentWeek, loaded, init, setWeek } = useTimetable();
+  const { courses, currentWeek, loaded, init, setWeek, settings } = useTimetable();
+  const showWeekends = settings?.showWeekends ?? true;
 
   useEffect(() => { init(); }, []);
 
@@ -21,18 +22,34 @@ export default function HomeScreen() {
     );
   }
 
+  const handleEmptyPress = (dayOfWeek: number, period: number) => {
+    router.push({ pathname: '/course/add', params: { dayOfWeek: String(dayOfWeek), startPeriod: String(period), endPeriod: String(Math.min(period + 1, 12)) } });
+  };
+
+  const weekCourses = courses.filter(c => c.weeks.includes(currentWeek));
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
       <WeekHeader
         currentWeek={currentWeek}
+        showWeekends={showWeekends}
         onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
         onNext={() => setWeek(currentWeek + 1)}
       />
       <TimetableGrid
         courses={courses}
         currentWeek={currentWeek}
+        showWeekends={showWeekends}
         onCoursePress={(c: Course) => router.push({ pathname: '/course-detail', params: { id: c.id } })}
+        onEmptyPress={handleEmptyPress}
       />
+
+      {/* 左下角课程计数 */}
+      <View style={{ position: 'absolute', bottom: 24, left: 16 }}>
+        <Text style={{ fontSize: 12, color: '#aaa' }}>
+          {weekCourses.length}门课 · 第{currentWeek}周
+        </Text>
+      </View>
 
       {/* FAB */}
       <TouchableOpacity

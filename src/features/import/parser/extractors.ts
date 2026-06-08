@@ -36,18 +36,27 @@ export function extractLocation(text: string): string {
   return '';
 }
 
-/** 提取节次范围 */
+/** 提取节次范围 — 支持 "1-2节"、"第1-2节"、"第1-2" */
 export function extractPeriods(text: string): string {
-  const m = text.match(/(\d+[-~]\d+)\s*节/);
-  return m ? m[1] : '';
+  const m = text.match(/第?(\d+)\s*[-~]\s*(\d+)/);
+  if (m) return `${m[1]}-${m[2]}`;
+  // 单节次 fallback
+  const single = text.match(/(\d+)\s*节/);
+  if (single) return `${single[1]}-${single[1]}`;
+  return '';
 }
 
-/** 提取周次范围 */
+/** 提取周次范围 — 支持 "1-18周"、"第1-18周"、"周次:1-18" */
 export function extractWeeks(text: string): string {
-  const patterns = [/(\d+[-~]\d+)\s*周/, /第?(\d+[-~]\d+)周/, /周次[：:]\s*(\d+[-~]\d+)/, /weeks?[：:]\s*(\d+[-~]\d+)/];
+  const patterns = [
+    /(\d+)\s*[-~]\s*(\d+)\s*周/,
+    /第(\d+)\s*[-~]\s*(\d+)\s*周/,
+    /周次[：:]\s*(\d+)\s*[-~]\s*(\d+)/,
+    /weeks?[：:]\s*(\d+)\s*[-~]\s*(\d+)/,
+  ];
   for (const p of patterns) {
     const m = text.match(p);
-    if (m) return m[1];
+    if (m) return `${m[1]}-${m[2]}`;
   }
   return '';
 }
