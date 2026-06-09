@@ -37,7 +37,7 @@ export function TimetableGrid({ courses, currentWeek, showWeekends, periodTimes,
         {days.map(day => {
           const dayCourses = weekCourses.filter(c => c.dayOfWeek === day);
           return (
-            <View key={day} style={{ flex: 1, borderLeftWidth: 1, borderColor: '#f0f0f0' }}>
+            <View key={day} style={{ flex: 1 }}>
               {times.map((_, periodIdx) => {
                 const period = periodIdx + 1;
                 const courseHere = dayCourses.find(c => c.startPeriod === period);

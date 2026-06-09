@@ -11,10 +11,10 @@ interface Props {
 
 export function WeekHeader({ currentWeek, showWeekends, onPrev, onNext }: Props) {
   const days = showWeekends ? WEEKDAY_NAMES : WEEKDAY_NAMES.slice(0, 5);
+  const labelW = 36;
 
   return (
     <View style={{ backgroundColor: '#fff', paddingTop: 4, paddingBottom: 6 }}>
-      {/* 周选择 */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 6 }}>
         <TouchableOpacity onPress={onPrev} hitSlop={12}>
           <Text style={{ fontSize: 16, color: '#ccc' }}>‹</Text>
@@ -29,7 +29,7 @@ export function WeekHeader({ currentWeek, showWeekends, onPrev, onNext }: Props)
 
       {/* 星期行 */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 12 }}>
-        <View style={{ width: 56 }} />
+        <View style={{ width: labelW }} />
         {days.map((name, i) => {
           const isToday = i + 1 === new Date().getDay() || (i === 6 && new Date().getDay() === 0);
           return (

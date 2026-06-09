@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator,
 import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 import { useTimetable } from '../src/features/timetable/store';
+import { parseCourseTable, parseGridData } from '../src/features/import/parser';
 import { searchSchools, loadSchools, SchoolEntry } from '../src/features/import/schools';
 import { generateId } from '../src/shared/utils/time';
 import { COURSE_COLORS } from '../src/shared/constants/theme';
@@ -16,56 +17,94 @@ import { COURSE_COLORS } from '../src/shared/constants/theme';
 const FETCH_SCRIPT = `
 (async function() {
   try {
-    // 获取当前页的 base URL
     var baseUrl = window.location.origin;
 
-    // 第一步: 获取学年学期
-    var xnm = '', xqm = '';
+    // === 第一步: 确定学年学期 ===
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth() + 1;
+    // 9月~2月为上学期(1), 3月~8月为下学期(2)
+    var xnm = (m >= 9) ? y : y - 1;
+    var xqm = (m >= 2 && m <= 7) ? '2' : '1';
+
+    // 从页面下拉框覆盖
     try {
-      // 从页面选择器中读选中值
       var selects = document.querySelectorAll('select');
       for (var s = 0; s < selects.length; s++) {
-        var opt = selects[s].querySelector('option[selected]');
-        if (!opt) {
-          opt = selects[s].querySelector('option');
-        }
-        if (opt && opt.value) {
-          var val = opt.value.trim();
-          if (/^\\d{4}$/.test(val)) { xnm = val; }
-          else if (/^\\d{1,2}$/.test(val)) { xqm = val; }
+        var sel = selects[s].options[selects[s].selectedIndex];
+        if (sel && sel.value) {
+          var v = sel.value.trim();
+          if (/^\\d{4}$/.test(v) && parseInt(v) >= 2020) { xnm = v; }
+          else if (v === '1' || v === '2' || v === '3') { xqm = v; }
         }
       }
     } catch(e) {}
 
-    if (!xnm || !xqm) {
-      // fallback: 从 URL 或常见值
-      var now = new Date();
-      var y = now.getFullYear();
-      var m = now.getMonth() + 1;
-      xnm = m >= 9 ? y : (m <= 2 ? y-1 : y-1);
-      xnm = xnm + '-' + (parseInt(xnm)+1);
-      xqm = (m >= 2 && m <= 7) ? '2' : '1';
+    // === 第二步: 尝试多个 API 路径 ===
+    var apiPaths = [
+      '/kbcx/xskbcx_cxXsgrkb.html',
+      '/jwglxt/kbcx/xskbcx_cxXsgrkb.html',
+      '/kbcx/xskbcx_cxXskbcxIndex.html',
+    ];
+    var formBody = 'xnm=' + xnm + '&xqm=' + xqm + '&kzlx=ck';
+
+    var jsonData = null;
+    for (var p = 0; p < apiPaths.length; p++) {
+      try {
+        var resp = await fetch(baseUrl + apiPaths[p] + '?gnmkdm=N2151', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: formBody
+        });
+        if (resp.ok) {
+          var text = await resp.text();
+          var obj = JSON.parse(text);
+          if (obj && obj.kbList) { jsonData = obj.kbList; break; }
+          if (obj && Array.isArray(obj)) { jsonData = obj; break; }
+          // 试试其他key
+          var keys = Object.keys(obj);
+          for (var k = 0; k < keys.length; k++) {
+            if (Array.isArray(obj[keys[k]]) && obj[keys[k]].length > 0) {
+              jsonData = obj[keys[k]]; break;
+            }
+          }
+          if (jsonData) break;
+        }
+      } catch(e) { continue; }
     }
 
-    // 第二步: 调 API
-    var apiUrl = baseUrl + '/kbcx/xskbcx_cxXsgrkb.html?gnmkdm=N2151&su=';
-
-    var formData = 'xnm=' + xnm.split('-')[0] + '&xqm=' + xqm + '&kzlx=ck&xsdm=';
-
-    var resp = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: formData
-    });
-    var json = await resp.json();
-
-    if (json && json.kbList && json.kbList.length > 0) {
-      window.ReactNativeWebView.postMessage('__JSON__' + JSON.stringify(json.kbList));
-    } else {
-      window.ReactNativeWebView.postMessage('__ERR__未找到课程数据，请确认已登录教务系统');
+    if (jsonData && jsonData.length > 0) {
+      window.ReactNativeWebView.postMessage('__JSON__' + JSON.stringify(jsonData));
+      return;
     }
+
+    // === 第三步: 尝试从页面 HTML 提取 jqGrid 数据 ===
+    var grids = document.querySelectorAll('.ui-jqgrid-btable');
+    for (var g = 0; g < grids.length; g++) {
+      var rows = grids[g].querySelectorAll('tbody tr');
+      if (rows.length > 3) {
+        var data = [];
+        for (var r = 0; r < rows.length; r++) {
+          var cells = rows[r].querySelectorAll('td');
+          if (cells.length > 0) {
+            var row = {};
+            for (var c = 0; c < cells.length; c++) {
+              row['col' + c] = cells[c].textContent.trim();
+            }
+            data.push(row);
+          }
+        }
+        if (data.length > 0) {
+          window.ReactNativeWebView.postMessage('__JQGRID__' + JSON.stringify(data));
+          return;
+        }
+      }
+    }
+
+    // === 第四步: 发送整个页面 HTML 给 RN 端解析 ===
+    window.ReactNativeWebView.postMessage('__HTML__' + document.documentElement.outerHTML);
   } catch(e) {
-    window.ReactNativeWebView.postMessage('__ERR__' + e.message);
+    window.ReactNativeWebView.postMessage('__HTML__' + document.documentElement.outerHTML);
   }
 })();
 true;
@@ -205,7 +244,7 @@ export default function ImportScreen() {
       return;
     }
 
-    // Fallback: 尝试 HTML table 解析 or jqGrid
+    // Fallback: jqGrid
     if (raw.startsWith('__JQGRID__')) {
       try {
         const items = JSON.parse(raw.slice(9));
@@ -214,23 +253,26 @@ export default function ImportScreen() {
       } catch {}
     }
 
-    // 纯 HTML
-    try {
-      const parsed = parseJsonCourses(JSON.parse(raw));
-      if (parsed.length > 0) { parseAndImport(parsed); return; }
-    } catch {}
-
-    // 粘贴 HTML 模式: 从 HTML 中提取 JSON
-    const jqMatch = raw.match(/var\s+\w+\s*=\s*(\[[\s\S]*?\])\s*;/);
-    if (jqMatch) {
-      try {
-        const items = JSON.parse(jqMatch[1]);
-        const parsed = parseJsonCourses(items);
-        if (parsed.length > 0) { parseAndImport(parsed); return; }
-      } catch {}
+    // HTML 回退：用 table 解析器
+    if (raw.startsWith('__HTML__')) {
+      const html = raw.slice(7);
+      const parsed = parseCourseTable(html);
+      if (parsed.length > 0) { parseAndImport(parsed.map(p => ({kcmc: p.name, xm: p.teacher, cdmc: p.location, xqj: String(p.dayOfWeek), jcs: p.periods, zcd: p.weeks}))); return; }
+      // 从 HTML 里找 JSON 变量
+      const jqMatch = html.match(/var\s+\w+\s*=\s*(\[[\s\S]*?\])\s*;/);
+      if (jqMatch) {
+        try { const items = JSON.parse(jqMatch[1]); const mapped = parseJsonCourses(items); if (mapped.length > 0) { parseAndImport(mapped); return; } } catch {}
+      }
+      Alert.alert('未识别到课程', '没找到课程数据，请确认已登录教务系统并位于课表页面');
+      return;
     }
 
-    Alert.alert('未识别到课程', '没找到课程数据，请确认已登录教务系统并位于课表页面');
+    // 试试 JSON 解析
+    try {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) { parseAndImport(data); return; }
+      if (data.kbList) { parseAndImport(data.kbList); return; }
+    } catch {}
   };
 
   return (
