@@ -9,16 +9,6 @@ import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 
-const lightTheme = {
-  ...MD3LightTheme,
-  colors: { ...MD3LightTheme.colors, primary: '#4A90D9', background: '#F5F5F7', surface: '#FFFFFF' },
-};
-
-const darkTheme = {
-  ...MD3DarkTheme,
-  colors: { ...MD3DarkTheme.colors, primary: '#5DA0E8', background: '#000000', surface: '#1C1C1E' },
-};
-
 // ── Error Boundary ──
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   state = { hasError: false, error: null };
@@ -26,9 +16,9 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 24 }}>
-          <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}>出错了</Text>
-          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>{this.state.error?.message}</Text>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F7', padding: 24 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8, color: '#333' }}>出错了</Text>
+          <Text style={{ fontSize: 14, color: '#999', textAlign: 'center' }}>{this.state.error?.message || '请重启应用'}</Text>
         </View>
       );
     }
@@ -39,9 +29,31 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
 export default function RootLayout() {
   const systemScheme = useColorScheme();
   const { settings } = useTimetable();
+  const themeColor = settings?.themeColor || '#4A90D9';
+
   const isDark = settings?.themeMode === 'auto'
     ? systemScheme === 'dark'
     : settings?.themeMode === 'dark';
+
+  const lightTheme = {
+    ...MD3LightTheme,
+    colors: {
+      ...MD3LightTheme.colors,
+      primary: themeColor,
+      background: '#F5F5F7',
+      surface: '#FFFFFF',
+    },
+  };
+
+  const darkTheme = {
+    ...MD3DarkTheme,
+    colors: {
+      ...MD3DarkTheme.colors,
+      primary: themeColor,
+      background: '#000000',
+      surface: '#1C1C1E',
+    },
+  };
 
   useEffect(() => { SplashScreen.hideAsync(); }, []);
 
