@@ -13,7 +13,7 @@ interface Props {
 }
 
 const GRID_H = 58;
-const LABEL_W = 52;
+const LABEL_W = 36;  // 缩窄
 
 export function TimetableGrid({ courses, currentWeek, showWeekends, periodTimes, onCoursePress }: Props) {
   const weekCourses = courses.filter(c => c.weeks.includes(currentWeek));
@@ -23,12 +23,12 @@ export function TimetableGrid({ courses, currentWeek, showWeekends, periodTimes,
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row' }}>
-        {/* 时间轴 */}
+        {/* 时间轴 — 只显示节次数字 */}
         <View style={{ width: LABEL_W, paddingTop: 4 }}>
           {times.map((t, i) => (
             <View key={i} style={{ height: GRID_H, justifyContent: 'flex-start', alignItems: 'center', paddingTop: 4 }}>
-              <Text style={{ fontSize: 9, color: '#bbb', fontWeight: '500' }}>{t[0]}</Text>
-              <Text style={{ fontSize: 7, color: '#ddd', marginTop: 1 }}>{t[1]}</Text>
+              <Text style={{ fontSize: 10, fontWeight: '600', color: '#999' }}>{i + 1}</Text>
+              <Text style={{ fontSize: 7, color: '#ccc', marginTop: 1 }}>{t[0]}</Text>
             </View>
           ))}
         </View>

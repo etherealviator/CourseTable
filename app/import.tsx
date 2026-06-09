@@ -3,10 +3,87 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator,
 import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 import { useTimetable } from '../src/features/timetable/store';
-import { parseCourseTable, parseGridData } from '../src/features/import/parser';
 import { searchSchools, loadSchools, SchoolEntry } from '../src/features/import/schools';
 import { generateId } from '../src/shared/utils/time';
 import { COURSE_COLORS } from '../src/shared/constants/theme';
+
+/**
+ * 正方教务系统 JSON API 注入脚本
+ * 1. 先获取学年学期
+ * 2. 然后调 API 拿课表 JSON
+ * 3. 发回 RN
+ */
+const FETCH_SCRIPT = `
+(async function() {
+  try {
+    // 获取当前页的 base URL
+    var baseUrl = window.location.origin;
+
+    // 第一步: 获取学年学期
+    var xnm = '', xqm = '';
+    try {
+      // 从页面选择器中读选中值
+      var selects = document.querySelectorAll('select');
+      for (var s = 0; s < selects.length; s++) {
+        var opt = selects[s].querySelector('option[selected]');
+        if (!opt) {
+          opt = selects[s].querySelector('option');
+        }
+        if (opt && opt.value) {
+          var val = opt.value.trim();
+          if (/^\\d{4}$/.test(val)) { xnm = val; }
+          else if (/^\\d{1,2}$/.test(val)) { xqm = val; }
+        }
+      }
+    } catch(e) {}
+
+    if (!xnm || !xqm) {
+      // fallback: 从 URL 或常见值
+      var now = new Date();
+      var y = now.getFullYear();
+      var m = now.getMonth() + 1;
+      xnm = m >= 9 ? y : (m <= 2 ? y-1 : y-1);
+      xnm = xnm + '-' + (parseInt(xnm)+1);
+      xqm = (m >= 2 && m <= 7) ? '2' : '1';
+    }
+
+    // 第二步: 调 API
+    var apiUrl = baseUrl + '/kbcx/xskbcx_cxXsgrkb.html?gnmkdm=N2151&su=';
+
+    var formData = 'xnm=' + xnm.split('-')[0] + '&xqm=' + xqm + '&kzlx=ck&xsdm=';
+
+    var resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: formData
+    });
+    var json = await resp.json();
+
+    if (json && json.kbList && json.kbList.length > 0) {
+      window.ReactNativeWebView.postMessage('__JSON__' + JSON.stringify(json.kbList));
+    } else {
+      window.ReactNativeWebView.postMessage('__ERR__未找到课程数据，请确认已登录教务系统');
+    }
+  } catch(e) {
+    window.ReactNativeWebView.postMessage('__ERR__' + e.message);
+  }
+})();
+true;
+`;
+
+/**
+ * 解析 jqGrid 或 JSON 数据
+ */
+function parseJsonCourses(items: any[]): any[] {
+  return items.map((item: any) => ({
+    name: item.kcmc || item.kc || item.name || item['课程名'] || '',
+    teacher: item.xm || item.jsxm || item.teacher || item['教师'] || '',
+    location: item.cdmc || item.jsmc || item.location || item['教室'] || '',
+    dayOfWeek: parseInt(item.xqj || item.day || item['星期'] || '1'),
+    periods: item.jcs || item.jcor || item.sections || item['节次'] || '',
+    weeks: item.zcd || item.weeks || item['周次'] || '',
+  }));
+}
 
 export default function ImportScreen() {
   const router = useRouter();
@@ -18,7 +95,7 @@ export default function ImportScreen() {
   const [schoolQuery, setSchoolQuery] = useState('');
   const [matchedSchools, setMatchedSchools] = useState<SchoolEntry[]>([]);
   const [htmlInput, setHtmlInput] = useState('');
-  const [parseResult, setParseResult] = useState<{ total: number; names: string[] } | null>(null);
+  const [statusText, setStatusText] = useState('');
 
   const handleSearch = async (q: string) => {
     setSchoolQuery(q);
@@ -26,232 +103,215 @@ export default function ImportScreen() {
     setMatchedSchools(searchSchools(q, schools));
   };
 
-  // ── 核心解析 ──
-  const doParse = (html: string) => {
-    // 1. 尝试 JSON 数组 (jqGrid)
-    try {
-      const data = JSON.parse(html);
-      if (Array.isArray(data) && data.length > 0) {
-        const r = parseGridData(data);
-        if (r.length > 0) return r;
-      }
-    } catch {}
+  const parseAndImport = (items: any[]) => {
+    const courses = items
+      .filter((item: any) => {
+        const name = item.kcmc || item.kc || item.name || item['课程名'] || item.name || '';
+        return name && name.length >= 2;
+      })
+      .map((item: any) => {
+        const name = item.kcmc || item.kc || item.name || item['课程名'] || item.name || '';
+        const teacher = item.xm || item.jsxm || item.teacher || item['教师'] || '';
+        const location = item.cdmc || item.jsmc || item.location || item['教室'] || '';
 
-    // 2. 尝试 HTML table 解析
-    const r = parseCourseTable(html);
-    if (r.length > 0) return r;
+        let dayOfWeek = parseInt(item.xqj || item.day || item['星期'] || '1');
+        if (isNaN(dayOfWeek) || dayOfWeek < 1 || dayOfWeek > 7) dayOfWeek = 1;
 
-    return [];
-  };
+        // 节次: "3-4" 或 "3" 格式
+        let periods = item.jcs || item.jcor || item.sections || item['节次'] || '';
+        let startPeriod = 1, endPeriod = 2;
+        const pm = periods.match(/(\d+)\s*[-~]\s*(\d+)/);
+        if (pm) {
+          startPeriod = parseInt(pm[1]);
+          endPeriod = parseInt(pm[2]);
+        } else if (periods) {
+          startPeriod = parseInt(periods) || 1;
+          endPeriod = startPeriod;
+        }
 
-  // ── 导入确认 ──
-  const confirmImport = (parsed: ReturnType<typeof doParse>) => {
-    if (parsed.length === 0) {
-      Alert.alert(
-        '未识别到课程',
-        '没能在页面中找到课程表数据。\n\n请确认：\n' +
-        '1. 已登录教务系统\n' +
-        '2. 当前页面是课表页面（不是首页/菜单页）\n' +
-        '3. 课表已完全加载显示\n\n' +
-        '试试在电脑浏览器打开课表 → Ctrl+A → Ctrl+C → 用「粘贴HTML」模式导入',
-        [{ text: '好的', style: 'default' }]
-      );
+        // 周次: "1-16周" "1-16周(单)" "1,3,5"
+        let weeks: number[] = [];
+        const weekStr = item.zcd || item.weeks || item['周次'] || '';
+        const wRange = weekStr.match(/(\d+)\s*[-~]\s*(\d+)/);
+        if (wRange) {
+          const isOdd = /单/.test(weekStr);
+          const isEven = /双/.test(weekStr);
+          for (let i = parseInt(wRange[1]); i <= parseInt(wRange[2]); i++) {
+            if (isOdd && i % 2 === 0) continue;
+            if (isEven && i % 2 === 1) continue;
+            weeks.push(i);
+          }
+        }
+        if (weeks.length === 0) {
+          weeks = Array.from({ length: 18 }, (_, i) => i + 1);
+        }
+
+        return {
+          id: generateId(),
+          name,
+          teacher,
+          location,
+          dayOfWeek,
+          startPeriod,
+          endPeriod,
+          weeks,
+          color: COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)],
+        };
+      });
+
+    if (courses.length === 0) {
+      Alert.alert('未识别到课程', '没有找到有效的课程数据');
       setLoading(false);
       return;
     }
 
-    const sample = parsed.slice(0, 15).map((p, i) =>
-      `  ${i+1}. ${p.name}${p.teacher ? ' ('+p.teacher+')' : ''}`
+    const sample = courses.slice(0, 10).map((c, i) =>
+      `  ${i+1}. ${c.name}${c.teacher ? ' ('+c.teacher+')' : ''}`
     ).join('\n');
 
-    setParseResult({ total: parsed.length, names: parsed.slice(0, 15).map(p => p.name) });
-
     Alert.alert(
-      `找到 ${parsed.length} 门课程`,
-      sample + '\n\n确认导入这些课程？',
+      `找到 ${courses.length} 门课程`,
+      sample + '\n\n确认导入？',
       [
-        { text: '取消', style: 'cancel', onPress: () => setLoading(false) },
+        { text: '取消', style: 'cancel', onPress: () => { setLoading(false); setShowWebView(false); }},
         {
           text: '✅ 导入',
           onPress: () => {
-            const courses = parsed.map(p => {
-              const [start, end] = (p.periods || '1-2').split('-').map(Number);
-              const weeks = parseWeeks(p.weeks);
-              return {
-                id: generateId(),
-                name: p.name,
-                teacher: p.teacher,
-                location: p.location,
-                dayOfWeek: p.dayOfWeek || 1,
-                startPeriod: start || 1,
-                endPeriod: end || 2,
-                weeks: weeks.length > 0 ? weeks : Array.from({ length: 18 }, (_, i) => i + 1),
-                color: COURSE_COLORS[Math.floor(Math.random() * COURSE_COLORS.length)],
-              };
-            });
             importCourses(courses);
             setLoading(false);
-            router.back();
+            setStatusText(`已导入 ${courses.length} 门课程`);
+            setTimeout(() => router.back(), 500);
           },
         },
       ]
     );
   };
 
-  // ── WebView 注入脚本 ──
-  // 核心逻辑: 在浏览器端找到课表表格, 只发送课表数据回 RN
-  const FETCH_SCRIPT = `
-(function() {
-  // === 检测1: jqGrid 表格 (正方系统, 最可靠) ===
-  var grids = document.querySelectorAll('.ui-jqgrid-btable');
-  for (var g = 0; g < grids.length; g++) {
-    var rows = grids[g].querySelectorAll('tbody tr');
-    if (rows.length > 3) {
-      var data = [];
-      for (var r = 0; r < rows.length; r++) {
-        var cells = rows[r].querySelectorAll('td');
-        if (cells.length > 0) {
-          var row = {};
-          for (var c = 0; c < cells.length; c++) {
-            row['col' + c] = cells[c].textContent.trim();
-          }
-          data.push(row);
-        }
-      }
-      if (data.length > 0) {
-        window.ReactNativeWebView.postMessage('__JQGRID__' + JSON.stringify(data));
-        return;
-      }
-    }
-  }
-
-  // === 检测2: 评分选表 ===
-  var allTables = document.querySelectorAll('table');
-
-  function isTimetable(table) {
-    var text = table.textContent || '';
-    var html = table.outerHTML || '';
-    var rows = table.querySelectorAll('tr').length;
-    var firstRow = table.querySelector('tr');
-    var cols = firstRow ? firstRow.querySelectorAll('td, th').length : 0;
-
-    // 行数列数基本检查
-    if (rows < 5 || cols < 4 || cols > 10) return false;
-
-    // 必须有课程相关关键词 (多项匹配才算)
-    var courseScore = 0;
-    if (/课程名|课名|kcmc|课程名称/i.test(text)) courseScore += 3;
-    if (/教师|老师|任课教师|授课教师|jsxm/i.test(text)) courseScore += 3;
-    if (/教室|上课地点|jsmc|cdmc/i.test(text)) courseScore += 2;
-    if (/星期|周[一二三四五六日天]|xqj|星期几/i.test(text)) courseScore += 3;
-    if (/节次|第\\d+节|jcor|skjc/i.test(text)) courseScore += 2;
-    if (/上课周|zcd|zc/i.test(text)) courseScore += 2;
-    if (/\\d+[-~]\\d+节/.test(text)) courseScore += 2;
-    if (/\\d+[-~]\\d+周/.test(text)) courseScore += 2;
-
-    if (courseScore < 5) return false;
-
-    // 排除非课表关键词
-    if (/登录|注册|密码|验证码|验证码|header|footer|菜单|导航|nav|版权/i.test(text)) return false;
-    if (/教学班组成|班级|学号|姓名|性别|专业|学院|系别|年级/i.test(text)) {
-      // 如果有班级信息但完全没有课程名, 排除
-      if (!/课程|课名/i.test(text) && courseScore < 8) return false;
-    }
-
-    return true;
-  }
-
-  // 找第一个符合条件的课表
-  for (var t = 0; t < allTables.length; t++) {
-    if (isTimetable(allTables[t])) {
-      window.ReactNativeWebView.postMessage(allTables[t].outerHTML);
-      return;
-    }
-  }
-
-  // 实在找不到, 发所有表格 (让 RN 端解析器尝试)
-  var allHtml = '';
-  for (var t = 0; t < allTables.length; t++) {
-    allHtml += allTables[t].outerHTML + '\\n---SEP---\\n';
-  }
-  window.ReactNativeWebView.postMessage(allHtml || document.body.innerHTML);
-})();
-true;
-`;
-
-  const triggerFetch = () => {
-    setLoading(true);
-    setParseResult(null);
-    webRef.current?.injectJavaScript(FETCH_SCRIPT);
-  };
-
   const handleWebViewMessage = (raw: string) => {
     setLoading(false);
 
-    if (raw.startsWith('__JQGRID__')) {
-      const json = raw.slice(9);
+    if (raw.startsWith('__JSON__')) {
       try {
-        const data = JSON.parse(json);
-        const parsed = parseGridData(data);
-        if (parsed.length > 0) { confirmImport(parsed); return; }
+        const items = JSON.parse(raw.slice(7));
+        if (Array.isArray(items)) {
+          parseAndImport(items);
+          return;
+        }
       } catch {}
     }
 
-    // 普通 HTML
-    const parsed = doParse(raw);
-    confirmImport(parsed);
+    if (raw.startsWith('__ERR__')) {
+      Alert.alert('获取失败', raw.slice(7));
+      return;
+    }
+
+    // Fallback: 尝试 HTML table 解析 or jqGrid
+    if (raw.startsWith('__JQGRID__')) {
+      try {
+        const items = JSON.parse(raw.slice(9));
+        const parsed = parseJsonCourses(items);
+        if (parsed.length > 0) { parseAndImport(parsed); return; }
+      } catch {}
+    }
+
+    // 纯 HTML
+    try {
+      const parsed = parseJsonCourses(JSON.parse(raw));
+      if (parsed.length > 0) { parseAndImport(parsed); return; }
+    } catch {}
+
+    // 粘贴 HTML 模式: 从 HTML 中提取 JSON
+    const jqMatch = raw.match(/var\s+\w+\s*=\s*(\[[\s\S]*?\])\s*;/);
+    if (jqMatch) {
+      try {
+        const items = JSON.parse(jqMatch[1]);
+        const parsed = parseJsonCourses(items);
+        if (parsed.length > 0) { parseAndImport(parsed); return; }
+      } catch {}
+    }
+
+    Alert.alert('未识别到课程', '没找到课程数据，请确认已登录教务系统并位于课表页面');
   };
 
-  // ── 渲染 ──
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentContainerStyle={{ padding: 16 }}>
-      {/* 推荐: 粘贴HTML */}
-      <View style={{ backgroundColor: '#EBF5FF', borderRadius: 12, padding: 14, marginBottom: 16 }}>
-        <Text style={{ color: '#1a1a1a', fontSize: 14, fontWeight: '700', marginBottom: 4 }}>💡 推荐方式</Text>
-        <Text style={{ color: '#555', fontSize: 12, lineHeight: 18 }}>
-          在电脑浏览器登录教务系统 → 进入课表页面 → Ctrl+A 全选 → Ctrl+C 复制 → 粘贴到下面文本框
+      {/* 步骤提示 */}
+      <View style={{ backgroundColor: '#F0F7FF', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: '#1a1a1a', marginBottom: 6 }}>📥 导入课程表</Text>
+        <Text style={{ fontSize: 13, color: '#555', lineHeight: 20 }}>
+          两种方式：{'\n'}
+          1️⃣ 直接粘贴教务系统课表页面的 HTML{'\n'}
+          2️⃣ 在应用内登录教务系统，自动抓取
         </Text>
       </View>
 
-      {/* 粘贴 HTML */}
-      <View style={{ backgroundColor: '#f5f5f7', borderRadius: 12, padding: 16, marginBottom: 16 }}>
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 8 }}>粘贴课表页面 HTML</Text>
+      {/* 方式1: 粘贴 HTML */}
+      <View style={{ marginBottom: 20 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 }}>方式一：粘贴 HTML</Text>
+        <Text style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>
+          浏览器打开教务课表页面 → Ctrl+A → Ctrl+C → 粘贴到下面
+        </Text>
         <TextInput
           value={htmlInput}
           onChangeText={setHtmlInput}
           multiline
           numberOfLines={5}
           placeholder="在此粘贴..."
-          style={{ backgroundColor: '#fff', borderRadius: 8, padding: 10, fontSize: 12, minHeight: 100, textAlignVertical: 'top', marginBottom: 8, borderWidth: 1, borderColor: '#e0e0e0' }}
+          style={{ backgroundColor: '#f5f5f7', borderRadius: 8, padding: 10, fontSize: 12, minHeight: 100, textAlignVertical: 'top', marginBottom: 8, borderWidth: 1, borderColor: '#e8e8e8' }}
         />
         <TouchableOpacity
-          onPress={() => htmlInput && confirmImport(doParse(htmlInput))}
+          onPress={() => {
+            if (!htmlInput) return;
+            setLoading(true);
+            // 尝试提取 JSON
+            try {
+              const data = JSON.parse(htmlInput);
+              if (Array.isArray(data)) {
+                parseAndImport(data);
+                return;
+              }
+              if (data.kbList) {
+                parseAndImport(data.kbList);
+                return;
+              }
+            } catch {}
+
+            // 从 HTML 中找 JSON 变量
+            const m = htmlInput.match(/var\s+\w+\s*=\s*(\[[\s\S]*?\])\s*;/);
+            if (m) {
+              try {
+                const items = JSON.parse(m[1]);
+                parseAndImport(items);
+                return;
+              } catch {}
+            }
+
+            setLoading(false);
+            Alert.alert('未识别', '没找到课程数据，试试方式二');
+          }}
           style={{ backgroundColor: '#4A90D9', borderRadius: 8, padding: 12, alignItems: 'center' }}
         >
-          <Text style={{ color: '#fff', fontWeight: '700' }}>解析并导入</Text>
-        </TouchableOpacity>
-        {parseResult && (
-          <Text style={{ fontSize: 12, color: '#10B981', marginTop: 8 }}>
-            找到 {parseResult.total} 门课程: {parseResult.names.slice(0, 5).join('、')}{parseResult.names.length > 5 ? '...' : ''}
+          <Text style={{ color: '#fff', fontWeight: '700' }}>
+            {loading ? '⏳ 解析中...' : '解析并导入'}
           </Text>
-        )}
+        </TouchableOpacity>
       </View>
 
-      {/* 或: WebView 模式 */}
-      <View style={{ backgroundColor: '#f5f5f7', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 8 }}>或者：在应用内登录教务系统</Text>
+      {/* 方式2: WebView */}
+      <View style={{ marginBottom: 20 }}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 }}>方式二：应用内登录</Text>
 
         <TextInput
           value={schoolQuery}
           onChangeText={handleSearch}
           placeholder="搜索学校名称..."
-          style={{ backgroundColor: '#fff', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 4, borderWidth: 1, borderColor: '#e0e0e0' }}
+          style={{ backgroundColor: '#f5f5f7', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 4, borderWidth: 1, borderColor: '#e8e8e8' }}
         />
         {matchedSchools.slice(0, 6).map(s => (
           <TouchableOpacity
             key={s.name}
             onPress={() => { setUrl(s.urls[0]); setSchoolQuery(s.name); }}
-            style={{ paddingVertical: 6, borderBottomWidth: 1, borderColor: '#eee' }}
+            style={{ paddingVertical: 6, borderBottomWidth: 1, borderColor: '#f0f0f0' }}
           >
             <Text style={{ fontSize: 14 }}>{s.name} <Text style={{ color: '#aaa', fontSize: 11 }}>{s.province}</Text></Text>
           </TouchableOpacity>
@@ -259,8 +319,8 @@ true;
         <TextInput
           value={url}
           onChangeText={setUrl}
-          placeholder="或直接输入网址"
-          style={{ backgroundColor: '#fff', borderRadius: 8, padding: 10, fontSize: 14, marginTop: 8, marginBottom: 8, borderWidth: 1, borderColor: '#e0e0e0' }}
+          placeholder="或直接输入教务系统网址"
+          style={{ backgroundColor: '#f5f5f7', borderRadius: 8, padding: 10, fontSize: 14, marginTop: 8, marginBottom: 8, borderWidth: 1, borderColor: '#e8e8e8' }}
         />
         <TouchableOpacity
           onPress={() => url && setShowWebView(true)}
@@ -272,12 +332,12 @@ true;
 
       {/* WebView */}
       {showWebView && (
-        <View style={{ height: 520, marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <View style={{ height: 500, marginBottom: 20 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
             <TouchableOpacity onPress={() => setShowWebView(false)}>
               <Text style={{ color: '#4A90D9', fontSize: 14 }}>← 关闭</Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 11, color: '#999' }}>登录后进课表页→点抓取</Text>
+            <Text style={{ fontSize: 11, color: '#999' }}>登录后点下方抓取</Text>
           </View>
 
           <View style={{ flex: 1, borderRadius: 12, overflow: 'hidden' }}>
@@ -291,40 +351,21 @@ true;
             />
           </View>
 
-          <View style={{ paddingVertical: 8 }}>
-            <TouchableOpacity
-              onPress={triggerFetch}
-              style={{ backgroundColor: '#4A90D9', borderRadius: 8, padding: 12, alignItems: 'center' }}
-            >
-              <Text style={{ color: '#fff', fontWeight: '700' }}>
-                {loading ? '⏳ 解析中...' : '📥 抓取课程数据'}
-              </Text>
-            </TouchableOpacity>
-            <Text style={{ fontSize: 11, color: '#aaa', textAlign: 'center', marginTop: 4 }}>
-              登录 → 进课表页面 → 点上方按钮
+          <TouchableOpacity
+            onPress={() => {
+              setLoading(true);
+              setStatusText('');
+              webRef.current?.injectJavaScript(FETCH_SCRIPT);
+            }}
+            style={{ backgroundColor: '#4A90D9', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 8 }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700' }}>
+              {loading ? '⏳ 获取中...' : '📥 一键获取课程数据'}
             </Text>
-          </View>
+          </TouchableOpacity>
+          {statusText ? <Text style={{ fontSize: 12, color: '#10B981', textAlign: 'center', marginTop: 4 }}>{statusText}</Text> : null}
         </View>
       )}
     </ScrollView>
   );
-}
-
-function parseWeeks(s: string): number[] {
-  if (!s) return [];
-  const single = s.match(/单周/);
-  const weeks: number[] = [];
-  const range = s.match(/(\d+)[-~](\d+)/);
-  if (range) {
-    for (let i = Number(range[1]); i <= Number(range[2]); i++) {
-      if (single && i % 2 === 0) continue;
-      if (!single && s.includes('双') && i % 2 === 1) continue;
-      weeks.push(i);
-    }
-  }
-  if (weeks.length === 0) {
-    const n = parseInt(s);
-    if (n > 0 && n <= 20) weeks.push(n);
-  }
-  return weeks.length > 0 ? weeks : Array.from({ length: 18 }, (_, i) => i + 1);
 }

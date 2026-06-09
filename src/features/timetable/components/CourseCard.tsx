@@ -10,7 +10,8 @@ interface Props {
 }
 
 export function CourseCard({ course, unitH, span, onPress }: Props) {
-  const longCourse = span >= 3;
+  // 根据跨节数决定显示多少信息
+  const showDetail = span >= 2;
 
   return (
     <TouchableOpacity
@@ -19,44 +20,44 @@ export function CourseCard({ course, unitH, span, onPress }: Props) {
       style={{
         flex: 1,
         backgroundColor: '#fff',
-        borderRadius: 8,
-        marginHorizontal: 2,
+        borderRadius: 6,
+        marginHorizontal: 1,
         marginVertical: 1,
-        padding: longCourse ? 8 : 5,
         borderLeftWidth: 3,
         borderLeftColor: course.color,
         elevation: 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.06,
         shadowRadius: 2,
+        padding: 6,
         justifyContent: 'flex-start',
       }}
     >
       <Text
-        numberOfLines={longCourse ? 3 : span >= 2 ? 2 : 1}
+        numberOfLines={span >= 3 ? 2 : 1}
         style={{
-          fontSize: longCourse ? 13 : 11,
+          fontSize: 12,
           fontWeight: '600',
           color: '#1a1a1a',
-          lineHeight: longCourse ? 17 : 14,
+          lineHeight: 16,
         }}
       >
         {course.name}
       </Text>
-      {course.location && (
+      {showDetail && course.location && (
         <Text
           numberOfLines={1}
           style={{
-            fontSize: longCourse ? 10 : 9,
+            fontSize: 10,
             color: '#888',
-            marginTop: longCourse ? 4 : 2,
+            marginTop: 3,
           }}
         >
           {course.location}
         </Text>
       )}
-      {course.teacher && span >= 2 && (
+      {span >= 3 && course.teacher && (
         <Text
           numberOfLines={1}
           style={{

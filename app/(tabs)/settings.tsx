@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,21 +15,34 @@ export default function SettingsScreen() {
   if (!settings) return null;
 
   const themeColor = settings.themeColor || '#4A90D9';
-  const periodTimes = settings.periodTimes ?? [];
-  // 补齐到12节
-  while (periodTimes.length < 12) {
-    periodTimes.push(`${8 + periodTimes.length}:00-${8 + periodTimes.length}:45`);
-  }
+  const [localTimes, setLocalTimes] = useState<string[]>(() => {
+    const pts = [...(settings?.periodTimes ?? [])];
+    while (pts.length < 12) pts.push(`${8 + pts.length}:00-${8 + pts.length}:45`);
+    return pts;
+  });
+
+  useEffect(() => {
+    if (settings?.periodTimes) {
+      const pts = [...settings.periodTimes];
+      while (pts.length < 12) pts.push(`${8 + pts.length}:00-${8 + pts.length}:45`);
+      setLocalTimes(pts);
+    }
+  }, [settings?.periodTimes]);
 
   const handleTimeChange = (idx: number, val: string) => {
-    const updated = [...periodTimes];
+    const updated = [...localTimes];
     updated[idx] = val;
-    // 自动扩展
-    while (updated.length < 12) {
-      const i = updated.length;
-      updated.push(`${8 + i}:00-${8 + i}:45`);
+    setLocalTimes(updated);
+  };
+
+  const saveTimes = () => {
+    const valid = localTimes.filter(t => /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(t));
+    if (valid.length < 6) {
+      alert('请至少填6节课的有效时间 (HH:MM-HH:MM)');
+      return;
     }
-    updateSettings({ periodTimes: updated });
+    updateSettings({ periodTimes: valid });
+    setEditTimes(false);
   };
 
   return (
@@ -90,7 +103,7 @@ export default function SettingsScreen() {
             {editTimes && (
               <View style={{ marginTop: 8, backgroundColor: '#f5f5f7', borderRadius: 12, padding: 12 }}>
                 <Text style={{ fontSize: 11, color: '#999', marginBottom: 8 }}>格式: HH:MM-HH:MM，例如 08:00-08:45</Text>
-                {periodTimes.slice(0, 12).map((t, i) => (
+                {localTimes.slice(0, 12).map((t, i) => (
                   <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                     <Text style={{ width: 50, fontSize: 13, color: '#666' }}>第{i+1}节</Text>
                     <TextInput
@@ -104,6 +117,12 @@ export default function SettingsScreen() {
                     />
                   </View>
                 ))}
+                <TouchableOpacity
+                  onPress={saveTimes}
+                  style={{ backgroundColor: themeColor, borderRadius: 6, padding: 10, alignItems: 'center', marginTop: 6 }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>保存时间段</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
