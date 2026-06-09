@@ -30,21 +30,20 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F7" />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <View style={{ backgroundColor: '#F5F5F7', paddingBottom: 4 }}>
-          <WeekHeader
-            currentWeek={currentWeek}
-            showWeekends={showWeekends}
-            onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
-            onNext={() => setWeek(currentWeek + 1)}
-            themeColor={themeColor}
-          />
-        </View>
+        {/* 周切换 */}
+        <WeekHeader
+          currentWeek={currentWeek}
+          showWeekends={showWeekends}
+          onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
+          onNext={() => setWeek(currentWeek + 1)}
+          themeColor={themeColor}
+        />
 
         {isEmpty ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 }}>
-            <Text style={{ fontSize: 48, marginBottom: 12 }}>📅</Text>
-            <Text style={{ fontSize: 16, color: '#999', marginBottom: 4 }}>本周没有课程</Text>
-            <Text style={{ fontSize: 13, color: '#bbb' }}>点下方 + 添加课程，或从设置页导入</Text>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 }}>
+            <Text style={{ fontSize: 40, marginBottom: 12 }}>📅</Text>
+            <Text style={{ fontSize: 15, color: '#999', marginBottom: 4 }}>本周没有课程安排</Text>
+            <Text style={{ fontSize: 12, color: '#ccc' }}>点右下角 + 添加课程</Text>
           </View>
         ) : (
           <TimetableGrid
@@ -55,27 +54,25 @@ export default function HomeScreen() {
           />
         )}
 
-        {/* 底部信息 */}
-        <View style={{ position: 'absolute', bottom: 16, left: 0, right: 0, alignItems: 'center' }}>
+        {/* 统计 + FAB */}
+        <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center' }}>
           <Text style={{ fontSize: 11, color: '#ccc' }}>
             {courses.length} 门课 · 第 {currentWeek} 周
-            {!isEmpty && ` · ${weekCourses.length} 门本周`}
           </Text>
         </View>
 
-        {/* FAB */}
         <TouchableOpacity
           onPress={() => router.push('/course/add')}
           activeOpacity={0.8}
           style={{
             position: 'absolute', bottom: 24, right: 20,
-            width: 52, height: 52, borderRadius: 26,
+            width: 50, height: 50, borderRadius: 25,
             backgroundColor: themeColor,
             alignItems: 'center', justifyContent: 'center',
-            elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4,
+            elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 5,
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 26, lineHeight: 28 }}>+</Text>
+          <Text style={{ color: '#fff', fontSize: 24, lineHeight: 26 }}>+</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </View>

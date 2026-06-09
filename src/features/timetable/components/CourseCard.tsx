@@ -4,45 +4,67 @@ import { Course } from '../../../shared/types';
 
 interface Props {
   course: Course;
-  gridUnit: number;
+  unitH: number;
+  span: number;
   onPress: (course: Course) => void;
 }
 
-export function CourseCard({ course, gridUnit, onPress }: Props) {
-  const periods = course.endPeriod - course.startPeriod + 1;
-  const height = periods * gridUnit - 6;
+export function CourseCard({ course, unitH, span, onPress }: Props) {
+  const bgColor = course.color + '18';
+  const textColor = course.color;
 
   return (
     <TouchableOpacity
       onPress={() => onPress(course)}
       activeOpacity={0.75}
       style={{
-        backgroundColor: course.color + '18',
+        flex: 1,
+        backgroundColor: bgColor,
         borderRadius: 8,
-        padding: 6,
-        height: Math.max(height, 38),
+        padding: span >= 3 ? 8 : 5,
         justifyContent: 'flex-start',
-        borderLeftWidth: 0,
         elevation: 1,
         shadowColor: course.color,
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.12,
+        shadowOpacity: 0.15,
         shadowRadius: 2,
       }}
     >
-      <Text numberOfLines={2} style={{ fontSize: 11, fontWeight: '700', color: course.color, lineHeight: 14 }}>
+      <Text
+        numberOfLines={span >= 3 ? 3 : span >= 2 ? 2 : 1}
+        style={{
+          fontSize: span >= 3 ? 12 : 11,
+          fontWeight: '700',
+          color: textColor,
+          lineHeight: span >= 3 ? 16 : 14,
+        }}
+      >
         {course.name}
       </Text>
-      {course.location ? (
-        <Text numberOfLines={1} style={{ fontSize: 9, color: course.color + 'aa', marginTop: 2 }}>
+      {course.location && (
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: span >= 3 ? 10 : 9,
+            color: textColor + 'aa',
+            marginTop: span >= 3 ? 4 : 2,
+          }}
+        >
           {course.location}
         </Text>
-      ) : null}
-      {course.teacher && periods <= 2 ? (
-        <Text numberOfLines={1} style={{ fontSize: 8, color: course.color + '88', marginTop: 1 }}>
+      )}
+      {course.teacher && span >= 2 && (
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: 9,
+            color: textColor + '88',
+            marginTop: 1,
+          }}
+        >
           {course.teacher}
         </Text>
-      ) : null}
+      )}
     </TouchableOpacity>
   );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { Course } from '../../../shared/types';
 import { CourseCard } from './CourseCard';
 import { PERIOD_TIMES } from '../../../shared/utils/time';
@@ -11,21 +11,31 @@ interface Props {
   onCoursePress: (course: Course) => void;
 }
 
-const GRID_UNIT = 60;
-const LABEL_WIDTH = 32;
+const GRID_H = 62;
+const LABEL_W = 50;
 
 export function TimetableGrid({ courses, currentWeek, showWeekends, onCoursePress }: Props) {
   const weekCourses = courses.filter(c => c.weeks.includes(currentWeek));
   const days = showWeekends ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5];
 
   return (
-    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-      <View style={{ flexDirection: 'row', paddingRight: 4 }}>
-        {/* 节次标签 */}
-        <View style={{ width: LABEL_WIDTH, paddingTop: 2 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#F5F5F7' }} showsVerticalScrollIndicator={false}>
+      <View style={{ flexDirection: 'row', paddingRight: 6 }}>
+        {/* 时间轴 */}
+        <View style={{ width: LABEL_W, paddingTop: 0 }}>
           {PERIOD_TIMES.map((t, i) => (
-            <View key={i} style={{ height: GRID_UNIT, justifyContent: 'flex-start', alignItems: 'center' }}>
-              <Text style={{ fontSize: 9, color: '#bbb', fontWeight: '500' }}>{i + 1}</Text>
+            <View
+              key={i}
+              style={{
+                height: GRID_H,
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                paddingTop: 2,
+              }}
+            >
+              <Text style={{ fontSize: 9, color: '#aaa', fontWeight: '600' }}>{t[0]}</Text>
+              <View style={{ height: 1, width: 16, backgroundColor: '#ddd', marginVertical: 2 }} />
+              <Text style={{ fontSize: 8, color: '#ccc' }}>{t[1]}</Text>
             </View>
           ))}
         </View>
@@ -41,17 +51,24 @@ export function TimetableGrid({ courses, currentWeek, showWeekends, onCoursePres
                 if (courseHere) {
                   const span = courseHere.endPeriod - courseHere.startPeriod + 1;
                   return (
-                    <View key={period} style={{ height: GRID_UNIT * span - 2, marginBottom: 2 }}>
-                      <CourseCard course={courseHere} gridUnit={GRID_UNIT} onPress={onCoursePress} />
+                    <View key={period} style={{ height: GRID_H * span - 3, marginBottom: 3 }}>
+                      <CourseCard course={courseHere} unitH={GRID_H} span={span} onPress={onCoursePress} />
                     </View>
                   );
                 }
                 const spanned = dayCourses.find(c => c.startPeriod < period && c.endPeriod >= period);
                 if (spanned) return null;
 
-                // 空白时段 — 纯白背景，无加号
                 return (
-                  <View key={period} style={{ height: GRID_UNIT - 2, marginBottom: 2, borderRadius: 4, backgroundColor: '#FAFAFA' }} />
+                  <View
+                    key={period}
+                    style={{
+                      height: GRID_H - 3,
+                      marginBottom: 3,
+                      borderRadius: 6,
+                      backgroundColor: day % 2 === 0 ? '#FAFAFA' : '#F8F8F8',
+                    }}
+                  />
                 );
               })}
             </View>

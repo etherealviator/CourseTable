@@ -30,19 +30,24 @@ export function parseTableStrategy(html: string): ParsedCourse[] {
         const cell = row[colIdx].trim();
         if (!cell || cell === '&nbsp;') continue;
         if (/^[\s\d]+$/.test(cell) || /^第?\d+[-~]?\d*[节\s]*$/.test(cell)) continue;
+        if (/^(上午|下午|晚上|中午)$/.test(cell)) continue;
 
         const day = colIdx === 0 ? 1 : Math.min(colIdx, 7);
-        const name = extractName(cell);
-        if (!name || name.length < 2) continue;
 
-        courses.push({
-          name,
-          teacher: extractTeacher(cell),
-          location: extractLocation(cell),
-          dayOfWeek: day,
-          periods,
-          weeks: extractWeeks(cell),
-        });
+        // 一个格子可能有多门课（<br>分割）
+        const parts = cell.split('|').filter(s => s.trim());
+        for (const part of parts) {
+          const name = extractName(part);
+          if (!name || name.length < 2) continue;
+          courses.push({
+            name,
+            teacher: extractTeacher(part),
+            location: extractLocation(part),
+            dayOfWeek: day,
+            periods,
+            weeks: extractWeeks(part),
+          });
+        }
       }
     }
   }
@@ -58,7 +63,14 @@ function extractRows(tableHtml: string): string[][] {
     const cellRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
     let cm: RegExpExecArray | null;
     while ((cm = cellRegex.exec(m[1])) !== null) {
-      cells.push(cm[1].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' '));
+      // 保留 <br> 以便后续分割多课程
+      let content = cm[1]
+        .replace(/<br\s*\/?>/gi, ' | ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      cells.push(content);
     }
     if (cells.length > 0) rows.push(cells);
   }
