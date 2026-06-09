@@ -32,4 +32,14 @@ export const PERIOD_TIMES: [string, string][] = [
   ['19:55', '20:40'], ['20:50', '21:35'], ['21:45', '22:30'],
 ];
 
+// 从设置中的 periodTimes 字符串数组解析成 [start, end] 格式
+export function parsePeriodTimes(arr?: string[]): [string, string][] {
+  if (!arr || arr.length === 0) return PERIOD_TIMES;
+  return arr.map(s => {
+    const parts = s.split('-');
+    if (parts.length === 2) return [parts[0].trim(), parts[1].trim()] as [string, string];
+    return ['??:??', '??:??'];
+  });
+}
+
 export const WEEKDAY_NAMES = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];

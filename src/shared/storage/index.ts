@@ -21,6 +21,12 @@ export async function replaceAllCourses(courses: Course[]): Promise<void> {
 
 // ── Settings ──
 
+const DEFAULT_PERIOD_TIMES = [
+  '08:00-08:45', '08:55-09:40', '10:00-10:45', '10:55-11:40',
+  '14:00-14:45', '14:55-15:40', '15:50-16:35', '16:45-17:30',
+  '19:00-19:45', '19:55-20:40', '20:50-21:35', '21:45-22:30',
+];
+
 const DEFAULT_SETTINGS: AppSettings = {
   semesterStart: '',
   totalWeeks: 20,
@@ -28,6 +34,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   currentWeek: 0,
   showWeekends: true,
   themeColor: '#3B82F6',
+  periodTimes: DEFAULT_PERIOD_TIMES,
 };
 
 export async function loadSettings(): Promise<AppSettings> {

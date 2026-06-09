@@ -35,4 +35,5 @@ export interface AppSettings {
   currentWeek: number;
   showWeekends: boolean;
   themeColor: string;
+  periodTimes?: string[];   // ["08:00-08:45", "08:55-09:40", ...] 自定义时间段
 }

@@ -10,24 +10,16 @@ interface Props {
 }
 
 export function CourseCard({ course, unitH, span, onPress }: Props) {
-  const bgColor = course.color + '18';
-  const textColor = course.color;
-
   return (
     <TouchableOpacity
       onPress={() => onPress(course)}
-      activeOpacity={0.75}
+      activeOpacity={0.8}
       style={{
         flex: 1,
-        backgroundColor: bgColor,
-        borderRadius: 8,
+        backgroundColor: course.color,
+        borderRadius: 6,
         padding: span >= 3 ? 8 : 5,
         justifyContent: 'flex-start',
-        elevation: 1,
-        shadowColor: course.color,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
-        shadowRadius: 2,
       }}
     >
       <Text
@@ -35,7 +27,7 @@ export function CourseCard({ course, unitH, span, onPress }: Props) {
         style={{
           fontSize: span >= 3 ? 12 : 11,
           fontWeight: '700',
-          color: textColor,
+          color: '#fff',
           lineHeight: span >= 3 ? 16 : 14,
         }}
       >
@@ -45,24 +37,12 @@ export function CourseCard({ course, unitH, span, onPress }: Props) {
         <Text
           numberOfLines={1}
           style={{
-            fontSize: span >= 3 ? 10 : 9,
-            color: textColor + 'aa',
-            marginTop: span >= 3 ? 4 : 2,
+            fontSize: 9,
+            color: 'rgba(255,255,255,0.8)',
+            marginTop: 2,
           }}
         >
           {course.location}
-        </Text>
-      )}
-      {course.teacher && span >= 2 && (
-        <Text
-          numberOfLines={1}
-          style={{
-            fontSize: 9,
-            color: textColor + '88',
-            marginTop: 1,
-          }}
-        >
-          {course.teacher}
         </Text>
       )}
     </TouchableOpacity>

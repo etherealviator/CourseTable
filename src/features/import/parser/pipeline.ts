@@ -9,5 +9,11 @@ export function cleanAndDeduplicate(courses: ParsedCourse[]): ParsedCourse[] {
       seen.add(key);
       return true;
     })
-    .filter(c => c.name.length >= 2);
+    .filter(c => {
+      const name = c.name.trim();
+      if (name.length < 2) return false;
+      if (/^(上午|下午|晚上|中午|第\d+节|\d+:\d+|\d+[-~]\d+节?)$/.test(name)) return false;
+      if (/^\d+$/.test(name)) return false;
+      return true;
+    });
 }
