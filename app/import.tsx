@@ -102,9 +102,7 @@ export default function ImportScreen() {
   // 核心逻辑: 在浏览器端找到课表表格, 只发送课表数据回 RN
   const FETCH_SCRIPT = `
 (function() {
-  var results = [];
-
-  // === 检测1: jqGrid 表格 (正方系统) ===
+  // === 检测1: jqGrid 表格 (正方系统, 最可靠) ===
   var grids = document.querySelectorAll('.ui-jqgrid-btable');
   for (var g = 0; g < grids.length; g++) {
     var rows = grids[g].querySelectorAll('tbody tr');
@@ -127,73 +125,56 @@ export default function ImportScreen() {
     }
   }
 
-  // === 检测2: 评分制选择课表表格 ===
+  // === 检测2: 评分选表 ===
   var allTables = document.querySelectorAll('table');
 
-  function scoreTable(table) {
+  function isTimetable(table) {
     var text = table.textContent || '';
     var html = table.outerHTML || '';
     var rows = table.querySelectorAll('tr').length;
-    var score = 0;
-
-    // 正向评分 — 课程相关关键词
-    if (/课程名|课名|kcmc|课程名称/i.test(text)) score += 15;
-    if (/教师|老师|任课教师|授课教师|jsxm/i.test(text)) score += 12;
-    if (/教室|上课地点|上课教室|jsmc|cdmc/i.test(text)) score += 12;
-    if (/星期|周[一二三四五六日天]|xqj/i.test(text)) score += 10;
-    if (/节次|第\\d+节|上课节次|jcor|skjc/i.test(text)) score += 10;
-    if (/周次|上课周|zcd|zc/i.test(text)) score += 8;
-
-    // 课表通常 7 列左右
     var firstRow = table.querySelector('tr');
     var cols = firstRow ? firstRow.querySelectorAll('td, th').length : 0;
-    if (cols >= 5 && cols <= 9) score += 8;
 
-    // 行数多加分
-    if (rows >= 8) score += 6;
-    if (rows >= 12) score += 4;
-    if (rows >= 16) score += 2;
+    // 行数列数基本检查
+    if (rows < 5 || cols < 4 || cols > 10) return false;
 
-    // 包含时间格式加分 (08:00, 09:40 等)
-    if (/\\d{2}:\\d{2}/.test(text)) score += 5;
+    // 必须有课程相关关键词 (多项匹配才算)
+    var courseScore = 0;
+    if (/课程名|课名|kcmc|课程名称/i.test(text)) courseScore += 3;
+    if (/教师|老师|任课教师|授课教师|jsxm/i.test(text)) courseScore += 3;
+    if (/教室|上课地点|jsmc|cdmc/i.test(text)) courseScore += 2;
+    if (/星期|周[一二三四五六日天]|xqj|星期几/i.test(text)) courseScore += 3;
+    if (/节次|第\\d+节|jcor|skjc/i.test(text)) courseScore += 2;
+    if (/上课周|zcd|zc/i.test(text)) courseScore += 2;
+    if (/\\d+[-~]\\d+节/.test(text)) courseScore += 2;
+    if (/\\d+[-~]\\d+周/.test(text)) courseScore += 2;
 
-    // 包含数字范围加分 (1-2节, 1-16周)
-    if (/\\d+[-~]\\d+节/.test(text)) score += 5;
-    if (/\\d+[-~]\\d+周/.test(text)) score += 5;
+    if (courseScore < 5) return false;
 
-    // 负向评分 — 明显不是课表
-    if (/登录|注册|密码|验证码|验证|header|footer|菜单|导航|nav|版权|友情链接|公告/i.test(text)) score -= 30;
-    if (/校长|书记|校训|校徽/i.test(text)) score -= 20;
-    if (/新闻|通知|公示/i.test(text)) score -= 15;
-    if (rows < 4) score -= 20;
+    // 排除非课表关键词
+    if (/登录|注册|密码|验证码|验证码|header|footer|菜单|导航|nav|版权/i.test(text)) return false;
+    if (/教学班组成|班级|学号|姓名|性别|专业|学院|系别|年级/i.test(text)) {
+      // 如果有班级信息但完全没有课程名, 排除
+      if (!/课程|课名/i.test(text) && courseScore < 8) return false;
+    }
 
-    // 列数太少肯定是别的表
-    if (cols < 3) score -= 20;
-
-    return score;
+    return true;
   }
 
-  var bestTable = null;
-  var bestScore = 0;
-
+  // 找第一个符合条件的课表
   for (var t = 0; t < allTables.length; t++) {
-    var sc = scoreTable(allTables[t]);
-    if (sc > bestScore) {
-      bestScore = sc;
-      bestTable = allTables[t];
+    if (isTimetable(allTables[t])) {
+      window.ReactNativeWebView.postMessage(allTables[t].outerHTML);
+      return;
     }
   }
 
-  if (bestTable && bestScore >= 15) {
-    window.ReactNativeWebView.postMessage(bestTable.outerHTML);
-  } else {
-    // 实在找不到, 把所有表格发回去让 RN端再试
-    var allHtml = '';
-    for (var t = 0; t < allTables.length; t++) {
-      allHtml += allTables[t].outerHTML + '\\n---SEP---\\n';
-    }
-    window.ReactNativeWebView.postMessage(allHtml || document.body.innerHTML);
+  // 实在找不到, 发所有表格 (让 RN 端解析器尝试)
+  var allHtml = '';
+  for (var t = 0; t < allTables.length; t++) {
+    allHtml += allTables[t].outerHTML + '\\n---SEP---\\n';
   }
+  window.ReactNativeWebView.postMessage(allHtml || document.body.innerHTML);
 })();
 true;
 `;

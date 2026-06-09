@@ -10,25 +10,36 @@ interface Props {
 }
 
 export function CourseCard({ course, unitH, span, onPress }: Props) {
+  const longCourse = span >= 3;
+
   return (
     <TouchableOpacity
       onPress={() => onPress(course)}
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       style={{
         flex: 1,
-        backgroundColor: course.color,
-        borderRadius: 6,
-        padding: span >= 3 ? 8 : 5,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        marginHorizontal: 2,
+        marginVertical: 1,
+        padding: longCourse ? 8 : 5,
+        borderLeftWidth: 3,
+        borderLeftColor: course.color,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 2,
         justifyContent: 'flex-start',
       }}
     >
       <Text
-        numberOfLines={span >= 3 ? 3 : span >= 2 ? 2 : 1}
+        numberOfLines={longCourse ? 3 : span >= 2 ? 2 : 1}
         style={{
-          fontSize: span >= 3 ? 12 : 11,
-          fontWeight: '700',
-          color: '#fff',
-          lineHeight: span >= 3 ? 16 : 14,
+          fontSize: longCourse ? 13 : 11,
+          fontWeight: '600',
+          color: '#1a1a1a',
+          lineHeight: longCourse ? 17 : 14,
         }}
       >
         {course.name}
@@ -37,12 +48,24 @@ export function CourseCard({ course, unitH, span, onPress }: Props) {
         <Text
           numberOfLines={1}
           style={{
-            fontSize: 9,
-            color: 'rgba(255,255,255,0.8)',
-            marginTop: 2,
+            fontSize: longCourse ? 10 : 9,
+            color: '#888',
+            marginTop: longCourse ? 4 : 2,
           }}
         >
           {course.location}
+        </Text>
+      )}
+      {course.teacher && span >= 2 && (
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: 9,
+            color: '#aaa',
+            marginTop: 1,
+          }}
+        >
+          {course.teacher}
         </Text>
       )}
     </TouchableOpacity>
