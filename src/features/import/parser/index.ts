@@ -1,13 +1,22 @@
 import { ParsedCourse } from '../../../shared/types';
 import { parseGridStrategy } from './strategies/grid';
+import { parseTableStrategy } from './strategies/table';
 import { cleanAndDeduplicate } from './pipeline';
 
 export type ParseStrategy = (html: string) => ParsedCourse[];
 
+const strategies: ParseStrategy[] = [
+  // 1. jqGrid JSON
+  parseGridStrategy,
+  // 2. 标准 HTML table
+  parseTableStrategy,
+];
+
 export function parseCourseTable(html: string): ParsedCourse[] {
-  // 尝试 jqGrid JSON 格式
-  const gridResult = parseGridStrategy(html);
-  if (gridResult.length > 0) return cleanAndDeduplicate(gridResult);
+  for (const s of strategies) {
+    const r = s(html);
+    if (r.length > 0) return cleanAndDeduplicate(r);
+  }
   return [];
 }
 

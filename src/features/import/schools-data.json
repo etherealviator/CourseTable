@@ -1,148 +1,1031 @@
-[
-  { "name": "北京大学", "urls": ["https://elective.pku.edu.cn"], "province": "北京" },
-  { "name": "清华大学", "urls": ["http://zhjw.cic.tsinghua.edu.cn"], "province": "北京" },
-  { "name": "中国人民大学", "urls": ["http://jw.ruc.edu.cn"], "province": "北京" },
-  { "name": "北京师范大学", "urls": ["http://jwc.bnu.edu.cn"], "province": "北京" },
-  { "name": "北京航空航天大学", "urls": ["http://jw.beihua.edu.cn"], "province": "北京" },
-  { "name": "北京理工大学", "urls": ["http://jwc.bit.edu.cn"], "province": "北京" },
-  { "name": "北京交通大学", "urls": ["http://jwc.bjtu.edu.cn"], "province": "北京" },
-  { "name": "北京科技大学", "urls": ["http://jwc.ustb.edu.cn"], "province": "北京" },
-  { "name": "北京邮电大学", "urls": ["http://jwc.bupt.edu.cn"], "province": "北京" },
-  { "name": "中国农业大学", "urls": ["http://jwc.cau.edu.cn"], "province": "北京" },
-  { "name": "北京化工大学", "urls": ["http://jwc.buct.edu.cn"], "province": "北京" },
-  { "name": "北京工业大学", "urls": ["http://jwc.bjut.edu.cn"], "province": "北京" },
-  { "name": "首都师范大学", "urls": ["http://jwc.cnu.edu.cn"], "province": "北京" },
-  { "name": "对外经济贸易大学", "urls": ["http://jwc.uibe.edu.cn"], "province": "北京" },
-  { "name": "中央财经大学", "urls": ["http://jwc.cufe.edu.cn"], "province": "北京" },
-  { "name": "复旦大学", "urls": ["http://jw.fudan.edu.cn"], "province": "上海" },
-  { "name": "上海交通大学", "urls": ["http://electsys.sjtu.edu.cn"], "province": "上海" },
-  { "name": "同济大学", "urls": ["http://jwc.tongji.edu.cn"], "province": "上海" },
-  { "name": "华东师范大学", "urls": ["http://jwc.ecnu.edu.cn"], "province": "上海" },
-  { "name": "上海大学", "urls": ["http://jwc.shu.edu.cn"], "province": "上海" },
-  { "name": "上海财经大学", "urls": ["http://jwc.shufe.edu.cn"], "province": "上海" },
-  { "name": "华东理工大学", "urls": ["http://jwc.ecust.edu.cn"], "province": "上海" },
-  { "name": "东华大学", "urls": ["http://jwc.dhu.edu.cn"], "province": "上海" },
-  { "name": "上海外国语大学", "urls": ["http://jwc.shisu.edu.cn"], "province": "上海" },
-  { "name": "上海理工大学", "urls": ["http://jwc.usst.edu.cn"], "province": "上海" },
-  { "name": "南京大学", "urls": ["http://jw.nju.edu.cn"], "province": "江苏" },
-  { "name": "东南大学", "urls": ["http://jwc.seu.edu.cn"], "province": "江苏" },
-  { "name": "南京航空航天大学", "urls": ["http://aao.nuaa.edu.cn"], "province": "江苏" },
-  { "name": "南京理工大学", "urls": ["http://jwc.njust.edu.cn"], "province": "江苏" },
-  { "name": "苏州大学", "urls": ["http://jwc.suda.edu.cn"], "province": "江苏" },
-  { "name": "河海大学", "urls": ["http://jwc.hhu.edu.cn"], "province": "江苏" },
-  { "name": "中国矿业大学", "urls": ["http://jwb.cumt.edu.cn"], "province": "江苏" },
-  { "name": "江南大学", "urls": ["http://jwc.jiangnan.edu.cn"], "province": "江苏" },
-  { "name": "南京师范大学", "urls": ["http://jwc.njnu.edu.cn"], "province": "江苏" },
-  { "name": "江苏大学", "urls": ["http://jwc.ujs.edu.cn"], "province": "江苏" },
-  { "name": "浙江大学", "urls": ["http://jw.zju.edu.cn"], "province": "浙江" },
-  { "name": "浙江工业大学", "urls": ["http://jwc.zjut.edu.cn"], "province": "浙江" },
-  { "name": "宁波大学", "urls": ["http://jwc.nbu.edu.cn"], "province": "浙江" },
-  { "name": "杭州电子科技大学", "urls": ["http://jwc.hdu.edu.cn"], "province": "浙江" },
-  { "name": "浙江师范大学", "urls": ["http://jwc.zjnu.edu.cn"], "province": "浙江" },
-  { "name": "中国科学技术大学", "urls": ["http://jw.ustc.edu.cn"], "province": "安徽" },
-  { "name": "合肥工业大学", "urls": ["http://jwb.hfut.edu.cn"], "province": "安徽" },
-  { "name": "安徽大学", "urls": ["http://jwc.ahu.edu.cn"], "province": "安徽" },
-  { "name": "厦门大学", "urls": ["http://jwc.xmu.edu.cn"], "province": "福建" },
-  { "name": "福州大学", "urls": ["http://jwc.fzu.edu.cn"], "province": "福建" },
-  { "name": "华侨大学", "urls": ["http://jwc.hqu.edu.cn"], "province": "福建" },
-  { "name": "南昌大学", "urls": ["http://jwc.ncu.edu.cn"], "province": "江西" },
-  { "name": "江西财经大学", "urls": ["http://jwc.jxufe.cn"], "province": "江西" },
-  { "name": "山东大学", "urls": ["http://jwc.sdu.edu.cn"], "province": "山东" },
-  { "name": "中国海洋大学", "urls": ["http://jwc.ouc.edu.cn"], "province": "山东" },
-  { "name": "青岛大学", "urls": ["http://jwc.qdu.edu.cn"], "province": "山东" },
-  { "name": "山东科技大学", "urls": ["http://jwc.sdust.edu.cn"], "province": "山东" },
-  { "name": "武汉大学", "urls": ["http://jwc.whu.edu.cn"], "province": "湖北" },
-  { "name": "华中科技大学", "urls": ["http://jwc.hust.edu.cn"], "province": "湖北" },
-  { "name": "武汉理工大学", "urls": ["http://jwc.whut.edu.cn"], "province": "湖北" },
-  { "name": "华中师范大学", "urls": ["http://jwc.ccnu.edu.cn"], "province": "湖北" },
-  { "name": "华中农业大学", "urls": ["http://jwc.hzau.edu.cn"], "province": "湖北" },
-  { "name": "中南财经政法大学", "urls": ["http://jwc.zuel.edu.cn"], "province": "湖北" },
-  { "name": "中国地质大学(武汉)", "urls": ["http://jwc.cug.edu.cn"], "province": "湖北" },
-  { "name": "湖北大学", "urls": ["http://jwc.hubu.edu.cn"], "province": "湖北" },
-  { "name": "湖南大学", "urls": ["http://jwc.hnu.edu.cn"], "province": "湖南" },
-  { "name": "中南大学", "urls": ["http://jwc.csu.edu.cn"], "province": "湖南" },
-  { "name": "湖南师范大学", "urls": ["http://jwc.hunnu.edu.cn"], "province": "湖南" },
-  { "name": "湘潭大学", "urls": ["http://jwc.xtu.edu.cn"], "province": "湖南" },
-  { "name": "国防科技大学", "urls": ["http://jwc.nudt.edu.cn"], "province": "湖南" },
-  { "name": "中山大学", "urls": ["http://jwc.sysu.edu.cn"], "province": "广东" },
-  { "name": "华南理工大学", "urls": ["http://jwc.scut.edu.cn"], "province": "广东" },
-  { "name": "暨南大学", "urls": ["http://jwc.jnu.edu.cn"], "province": "广东" },
-  { "name": "华南师范大学", "urls": ["http://jwc.scnu.edu.cn"], "province": "广东" },
-  { "name": "广东工业大学", "urls": ["http://jwc.gdut.edu.cn"], "province": "广东" },
-  { "name": "深圳大学", "urls": ["http://jwc.szu.edu.cn"], "province": "广东" },
-  { "name": "南方科技大学", "urls": ["http://jwc.sustech.edu.cn"], "province": "广东" },
-  { "name": "广州大学", "urls": ["http://jwc.gzhu.edu.cn"], "province": "广东" },
-  { "name": "华南农业大学", "urls": ["http://jwc.scau.edu.cn"], "province": "广东" },
-  { "name": "汕头大学", "urls": ["http://jwc.stu.edu.cn"], "province": "广东" },
-  { "name": "广东外语外贸大学", "urls": ["http://jwc.gdufs.edu.cn"], "province": "广东" },
-  { "name": "广西大学", "urls": ["http://jwc.gxu.edu.cn"], "province": "广西" },
-  { "name": "海南大学", "urls": ["http://jwc.hainanu.edu.cn"], "province": "海南" },
-  { "name": "重庆大学", "urls": ["http://jwc.cqu.edu.cn"], "province": "重庆" },
-  { "name": "西南大学", "urls": ["http://jwc.swu.edu.cn"], "province": "重庆" },
-  { "name": "重庆邮电大学", "urls": ["http://jwc.cqupt.edu.cn"], "province": "重庆" },
-  { "name": "四川大学", "urls": ["http://jwc.scu.edu.cn"], "province": "四川" },
-  { "name": "电子科技大学", "urls": ["http://jwc.uestc.edu.cn"], "province": "四川" },
-  { "name": "西南交通大学", "urls": ["http://jwc.swjtu.edu.cn"], "province": "四川" },
-  { "name": "西南财经大学", "urls": ["http://jwc.swufe.edu.cn"], "province": "四川" },
-  { "name": "四川农业大学", "urls": ["http://jwc.sicau.edu.cn"], "province": "四川" },
-  { "name": "成都理工大学", "urls": ["http://jwc.cdut.edu.cn"], "province": "四川" },
-  { "name": "西南科技大学", "urls": ["http://jwc.swust.edu.cn"], "province": "四川" },
-  { "name": "贵州大学", "urls": ["http://jwc.gzu.edu.cn"], "province": "贵州" },
-  { "name": "云南大学", "urls": ["http://jwc.ynu.edu.cn"], "province": "云南" },
-  { "name": "昆明理工大学", "urls": ["http://jwc.kust.edu.cn"], "province": "云南" },
-  { "name": "西藏大学", "urls": ["http://jwc.utibet.edu.cn"], "province": "西藏" },
-  { "name": "西安交通大学", "urls": ["http://jwc.xjtu.edu.cn"], "province": "陕西" },
-  { "name": "西北工业大学", "urls": ["http://jwc.nwpu.edu.cn"], "province": "陕西" },
-  { "name": "西安电子科技大学", "urls": ["http://jwc.xidian.edu.cn"], "province": "陕西" },
-  { "name": "西北大学", "urls": ["http://jwc.nwu.edu.cn"], "province": "陕西" },
-  { "name": "长安大学", "urls": ["http://jwc.chd.edu.cn"], "province": "陕西" },
-  { "name": "陕西师范大学", "urls": ["http://jwc.snnu.edu.cn"], "province": "陕西" },
-  { "name": "西北农林科技大学", "urls": ["http://jwc.nwsuaf.edu.cn"], "province": "陕西" },
-  { "name": "兰州大学", "urls": ["http://jwc.lzu.edu.cn"], "province": "甘肃" },
-  { "name": "西北师范大学", "urls": ["http://jwc.nwnu.edu.cn"], "province": "甘肃" },
-  { "name": "青海大学", "urls": ["http://jwc.qhu.edu.cn"], "province": "青海" },
-  { "name": "宁夏大学", "urls": ["http://jwc.nxu.edu.cn"], "province": "宁夏" },
-  { "name": "新疆大学", "urls": ["http://jwc.xju.edu.cn"], "province": "新疆" },
-  { "name": "石河子大学", "urls": ["http://jwc.shzu.edu.cn"], "province": "新疆" },
-  { "name": "哈尔滨工业大学", "urls": ["http://jw.hit.edu.cn"], "province": "黑龙江" },
-  { "name": "哈尔滨工程大学", "urls": ["http://jwc.hrbeu.edu.cn"], "province": "黑龙江" },
-  { "name": "东北林业大学", "urls": ["http://jwc.nefu.edu.cn"], "province": "黑龙江" },
-  { "name": "黑龙江大学", "urls": ["http://jwc.hlju.edu.cn"], "province": "黑龙江" },
-  { "name": "吉林大学", "urls": ["http://jwc.jlu.edu.cn"], "province": "吉林" },
-  { "name": "东北师范大学", "urls": ["http://jwc.nenu.edu.cn"], "province": "吉林" },
-  { "name": "延边大学", "urls": ["http://jwc.ybu.edu.cn"], "province": "吉林" },
-  { "name": "大连理工大学", "urls": ["http://jwc.dlut.edu.cn"], "province": "辽宁" },
-  { "name": "东北大学", "urls": ["http://jwc.neu.edu.cn"], "province": "辽宁" },
-  { "name": "辽宁大学", "urls": ["http://jwc.lnu.edu.cn"], "province": "辽宁" },
-  { "name": "大连海事大学", "urls": ["http://jwc.dlmu.edu.cn"], "province": "辽宁" },
-  { "name": "沈阳工业大学", "urls": ["http://jwc.sut.edu.cn"], "province": "辽宁" },
-  { "name": "郑州大学", "urls": ["http://jwc.zzu.edu.cn"], "province": "河南" },
-  { "name": "河南大学", "urls": ["http://jwc.henu.edu.cn"], "province": "河南" },
-  { "name": "河南理工大学", "urls": ["http://jwc.hpu.edu.cn"], "province": "河南" },
-  { "name": "河北大学", "urls": ["http://jwc.hbu.edu.cn"], "province": "河北" },
-  { "name": "燕山大学", "urls": ["http://jwc.ysu.edu.cn"], "province": "河北" },
-  { "name": "河北工业大学", "urls": ["http://jwc.hebut.edu.cn"], "province": "河北" },
-  { "name": "华北电力大学", "urls": ["http://jwc.ncepu.edu.cn"], "province": "河北" },
-  { "name": "山西大学", "urls": ["http://jwc.sxu.edu.cn"], "province": "山西" },
-  { "name": "太原理工大学", "urls": ["http://jwc.tyut.edu.cn"], "province": "山西" },
-  { "name": "中北大学", "urls": ["http://jwc.nuc.edu.cn"], "province": "山西" },
-  { "name": "内蒙古大学", "urls": ["http://jwc.imu.edu.cn"], "province": "内蒙古" },
-  { "name": "天津大学", "urls": ["http://jwc.tju.edu.cn"], "province": "天津" },
-  { "name": "南开大学", "urls": ["http://jwc.nankai.edu.cn"], "province": "天津" },
-  { "name": "天津师范大学", "urls": ["http://jwc.tjnu.edu.cn"], "province": "天津" },
-  { "name": "天津工业大学", "urls": ["http://jwc.tjpu.edu.cn"], "province": "天津" },
-  { "name": "西北民族大学", "urls": ["http://jwc.xbmu.edu.cn"], "province": "甘肃" },
-  { "name": "大连大学", "urls": ["http://jwc.dlu.edu.cn"], "province": "辽宁" },
-  { "name": "温州大学", "urls": ["http://jwc.wzu.edu.cn"], "province": "浙江" },
-  { "name": "浙江工商大学", "urls": ["http://jwc.zjgsu.edu.cn"], "province": "浙江" },
-  { "name": "浙江理工大学", "urls": ["http://jwc.zstu.edu.cn"], "province": "浙江" },
-  { "name": "中国计量大学", "urls": ["http://jwc.cjlu.edu.cn"], "province": "浙江" },
-  { "name": "集美大学", "urls": ["http://jwc.jmu.edu.cn"], "province": "福建" },
-  { "name": "福建师范大学", "urls": ["http://jwc.fjnu.edu.cn"], "province": "福建" },
-  { "name": "东北财经大学", "urls": ["http://jwc.dufe.edu.cn"], "province": "辽宁" },
-  { "name": "中国石油大学(华东)", "urls": ["http://jwc.upc.edu.cn"], "province": "山东" },
-  { "name": "山东师范大学", "urls": ["http://jwc.sdnu.edu.cn"], "province": "山东" },
-  { "name": "济南大学", "urls": ["http://jwc.ujn.edu.cn"], "province": "山东" },
-  { "name": "曲阜师范大学", "urls": ["http://jwc.qfnu.edu.cn"], "province": "山东" },
-  { "name": "中国矿业大学(北京)", "urls": ["http://jwc.cumtb.edu.cn"], "province": "北京" }
+﻿[
+    {
+        "name":  "北京大学",
+        "urls":  [
+                     "https://elective.pku.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "清华大学",
+        "urls":  [
+                     "http://zhjw.cic.tsinghua.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "中国人民大学",
+        "urls":  [
+                     "http://jw.ruc.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京师范大学",
+        "urls":  [
+                     "http://jwc.bnu.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京航空航天大学",
+        "urls":  [
+                     "http://jw.beihua.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京理工大学",
+        "urls":  [
+                     "http://jwc.bit.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京交通大学",
+        "urls":  [
+                     "http://jwc.bjtu.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京科技大学",
+        "urls":  [
+                     "http://jwc.ustb.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京邮电大学",
+        "urls":  [
+                     "http://jwc.bupt.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "中国农业大学",
+        "urls":  [
+                     "http://jwc.cau.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京化工大学",
+        "urls":  [
+                     "http://jwc.buct.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "北京工业大学",
+        "urls":  [
+                     "http://jwc.bjut.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "首都师范大学",
+        "urls":  [
+                     "http://jwc.cnu.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "对外经济贸易大学",
+        "urls":  [
+                     "http://jwc.uibe.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "中央财经大学",
+        "urls":  [
+                     "http://jwc.cufe.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "复旦大学",
+        "urls":  [
+                     "http://jw.fudan.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "上海交通大学",
+        "urls":  [
+                     "http://electsys.sjtu.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "同济大学",
+        "urls":  [
+                     "http://jwc.tongji.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "华东师范大学",
+        "urls":  [
+                     "http://jwc.ecnu.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "上海大学",
+        "urls":  [
+                     "http://jwc.shu.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "上海财经大学",
+        "urls":  [
+                     "http://jwc.shufe.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "华东理工大学",
+        "urls":  [
+                     "http://jwc.ecust.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "东华大学",
+        "urls":  [
+                     "http://jwc.dhu.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "上海外国语大学",
+        "urls":  [
+                     "http://jwc.shisu.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "上海理工大学",
+        "urls":  [
+                     "http://jwc.usst.edu.cn"
+                 ],
+        "province":  "上海"
+    },
+    {
+        "name":  "南京大学",
+        "urls":  [
+                     "http://jw.nju.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "东南大学",
+        "urls":  [
+                     "http://jwc.seu.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "南京航空航天大学",
+        "urls":  [
+                     "http://aao.nuaa.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "南京理工大学",
+        "urls":  [
+                     "http://jwc.njust.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "苏州大学",
+        "urls":  [
+                     "http://jwc.suda.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "河海大学",
+        "urls":  [
+                     "http://jwc.hhu.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "中国矿业大学",
+        "urls":  [
+                     "http://jwb.cumt.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "江南大学",
+        "urls":  [
+                     "http://jwc.jiangnan.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "南京师范大学",
+        "urls":  [
+                     "http://jwc.njnu.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "江苏大学",
+        "urls":  [
+                     "http://jwc.ujs.edu.cn"
+                 ],
+        "province":  "江苏"
+    },
+    {
+        "name":  "浙江大学",
+        "urls":  [
+                     "http://jw.zju.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "浙江工业大学",
+        "urls":  [
+                     "http://jwc.zjut.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "宁波大学",
+        "urls":  [
+                     "http://jwc.nbu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "杭州电子科技大学",
+        "urls":  [
+                     "http://jwc.hdu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "浙江师范大学",
+        "urls":  [
+                     "http://jwc.zjnu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "中国科学技术大学",
+        "urls":  [
+                     "http://jw.ustc.edu.cn"
+                 ],
+        "province":  "安徽"
+    },
+    {
+        "name":  "合肥工业大学",
+        "urls":  [
+                     "http://jwb.hfut.edu.cn"
+                 ],
+        "province":  "安徽"
+    },
+    {
+        "name":  "安徽大学",
+        "urls":  [
+                     "http://jwc.ahu.edu.cn"
+                 ],
+        "province":  "安徽"
+    },
+    {
+        "name":  "厦门大学",
+        "urls":  [
+                     "http://jwc.xmu.edu.cn"
+                 ],
+        "province":  "福建"
+    },
+    {
+        "name":  "福州大学",
+        "urls":  [
+                     "http://jwc.fzu.edu.cn"
+                 ],
+        "province":  "福建"
+    },
+    {
+        "name":  "华侨大学",
+        "urls":  [
+                     "http://jwc.hqu.edu.cn"
+                 ],
+        "province":  "福建"
+    },
+    {
+        "name":  "南昌大学",
+        "urls":  [
+                     "http://jwc.ncu.edu.cn"
+                 ],
+        "province":  "江西"
+    },
+    {
+        "name":  "江西财经大学",
+        "urls":  [
+                     "http://jwc.jxufe.cn"
+                 ],
+        "province":  "江西"
+    },
+    {
+        "name":  "山东大学",
+        "urls":  [
+                     "http://jwc.sdu.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "中国海洋大学",
+        "urls":  [
+                     "http://jwc.ouc.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "青岛大学",
+        "urls":  [
+                     "http://jwc.qdu.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "山东科技大学",
+        "urls":  [
+                     "http://jwc.sdust.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "武汉大学",
+        "urls":  [
+                     "http://jwc.whu.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "华中科技大学",
+        "urls":  [
+                     "http://jwc.hust.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "武汉理工大学",
+        "urls":  [
+                     "http://jwc.whut.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "华中师范大学",
+        "urls":  [
+                     "http://jwc.ccnu.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "华中农业大学",
+        "urls":  [
+                     "http://jwc.hzau.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "中南财经政法大学",
+        "urls":  [
+                     "http://jwc.zuel.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "中国地质大学(武汉)",
+        "urls":  [
+                     "http://jwc.cug.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "湖北大学",
+        "urls":  [
+                     "http://jwc.hubu.edu.cn"
+                 ],
+        "province":  "湖北"
+    },
+    {
+        "name":  "湖南大学",
+        "urls":  [
+                     "http://jwc.hnu.edu.cn"
+                 ],
+        "province":  "湖南"
+    },
+    {
+        "name":  "中南大学",
+        "urls":  [
+                     "http://jwc.csu.edu.cn"
+                 ],
+        "province":  "湖南"
+    },
+    {
+        "name":  "湖南师范大学",
+        "urls":  [
+                     "http://jwc.hunnu.edu.cn"
+                 ],
+        "province":  "湖南"
+    },
+    {
+        "name":  "湘潭大学",
+        "urls":  [
+                     "http://jwc.xtu.edu.cn"
+                 ],
+        "province":  "湖南"
+    },
+    {
+        "name":  "国防科技大学",
+        "urls":  [
+                     "http://jwc.nudt.edu.cn"
+                 ],
+        "province":  "湖南"
+    },
+    {
+        "name":  "中山大学",
+        "urls":  [
+                     "http://jwc.sysu.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "华南理工大学",
+        "urls":  [
+                     "http://jwc.scut.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "暨南大学",
+        "urls":  [
+                     "http://jwc.jnu.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "华南师范大学",
+        "urls":  [
+                     "http://jwc.scnu.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "广东工业大学",
+        "urls":  [
+                     "http://jwc.gdut.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "深圳大学",
+        "urls":  [
+                     "http://jwc.szu.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "南方科技大学",
+        "urls":  [
+                     "http://jwc.sustech.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "广州大学",
+        "urls":  [
+                     "http://jwc.gzhu.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "华南农业大学",
+        "urls":  [
+                     "http://jwc.scau.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "汕头大学",
+        "urls":  [
+                     "http://jwc.stu.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "广东外语外贸大学",
+        "urls":  [
+                     "http://jwc.gdufs.edu.cn"
+                 ],
+        "province":  "广东"
+    },
+    {
+        "name":  "广西大学",
+        "urls":  [
+                     "http://jwc.gxu.edu.cn"
+                 ],
+        "province":  "广西"
+    },
+    {
+        "name":  "海南大学",
+        "urls":  [
+                     "http://jwc.hainanu.edu.cn"
+                 ],
+        "province":  "海南"
+    },
+    {
+        "name":  "重庆大学",
+        "urls":  [
+                     "http://jwc.cqu.edu.cn"
+                 ],
+        "province":  "重庆"
+    },
+    {
+        "name":  "西南大学",
+        "urls":  [
+                     "http://jwc.swu.edu.cn"
+                 ],
+        "province":  "重庆"
+    },
+    {
+        "name":  "重庆邮电大学",
+        "urls":  [
+                     "http://jwc.cqupt.edu.cn"
+                 ],
+        "province":  "重庆"
+    },
+    {
+        "name":  "四川大学",
+        "urls":  [
+                     "http://jwc.scu.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "电子科技大学",
+        "urls":  [
+                     "http://jwc.uestc.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "西南交通大学",
+        "urls":  [
+                     "http://jwc.swjtu.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "西南财经大学",
+        "urls":  [
+                     "http://jwc.swufe.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "四川农业大学",
+        "urls":  [
+                     "http://jwc.sicau.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "成都理工大学",
+        "urls":  [
+                     "http://jwc.cdut.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "西南科技大学",
+        "urls":  [
+                     "http://jwc.swust.edu.cn"
+                 ],
+        "province":  "四川"
+    },
+    {
+        "name":  "贵州大学",
+        "urls":  [
+                     "http://jwc.gzu.edu.cn"
+                 ],
+        "province":  "贵州"
+    },
+    {
+        "name":  "云南大学",
+        "urls":  [
+                     "http://jwc.ynu.edu.cn"
+                 ],
+        "province":  "云南"
+    },
+    {
+        "name":  "昆明理工大学",
+        "urls":  [
+                     "http://jwc.kust.edu.cn"
+                 ],
+        "province":  "云南"
+    },
+    {
+        "name":  "西藏大学",
+        "urls":  [
+                     "http://jwc.utibet.edu.cn"
+                 ],
+        "province":  "西藏"
+    },
+    {
+        "name":  "西安交通大学",
+        "urls":  [
+                     "http://jwc.xjtu.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "西北工业大学",
+        "urls":  [
+                     "http://jwc.nwpu.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "西安电子科技大学",
+        "urls":  [
+                     "http://jwc.xidian.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "西北大学",
+        "urls":  [
+                     "http://jwc.nwu.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "长安大学",
+        "urls":  [
+                     "http://jwc.chd.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "陕西师范大学",
+        "urls":  [
+                     "http://jwc.snnu.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "西北农林科技大学",
+        "urls":  [
+                     "http://jwc.nwsuaf.edu.cn"
+                 ],
+        "province":  "陕西"
+    },
+    {
+        "name":  "兰州大学",
+        "urls":  [
+                     "http://jwc.lzu.edu.cn"
+                 ],
+        "province":  "甘肃"
+    },
+    {
+        "name":  "西北师范大学",
+        "urls":  [
+                     "http://jwc.nwnu.edu.cn"
+                 ],
+        "province":  "甘肃"
+    },
+    {
+        "name":  "青海大学",
+        "urls":  [
+                     "http://jwc.qhu.edu.cn"
+                 ],
+        "province":  "青海"
+    },
+    {
+        "name":  "宁夏大学",
+        "urls":  [
+                     "http://jwc.nxu.edu.cn"
+                 ],
+        "province":  "宁夏"
+    },
+    {
+        "name":  "新疆大学",
+        "urls":  [
+                     "http://jwc.xju.edu.cn"
+                 ],
+        "province":  "新疆"
+    },
+    {
+        "name":  "石河子大学",
+        "urls":  [
+                     "http://jwc.shzu.edu.cn"
+                 ],
+        "province":  "新疆"
+    },
+    {
+        "name":  "哈尔滨工业大学",
+        "urls":  [
+                     "http://jw.hit.edu.cn"
+                 ],
+        "province":  "黑龙江"
+    },
+    {
+        "name":  "哈尔滨工程大学",
+        "urls":  [
+                     "http://jwc.hrbeu.edu.cn"
+                 ],
+        "province":  "黑龙江"
+    },
+    {
+        "name":  "东北林业大学",
+        "urls":  [
+                     "http://jwc.nefu.edu.cn"
+                 ],
+        "province":  "黑龙江"
+    },
+    {
+        "name":  "黑龙江大学",
+        "urls":  [
+                     "http://jwc.hlju.edu.cn"
+                 ],
+        "province":  "黑龙江"
+    },
+    {
+        "name":  "吉林大学",
+        "urls":  [
+                     "http://jwc.jlu.edu.cn"
+                 ],
+        "province":  "吉林"
+    },
+    {
+        "name":  "东北师范大学",
+        "urls":  [
+                     "http://jwc.nenu.edu.cn"
+                 ],
+        "province":  "吉林"
+    },
+    {
+        "name":  "延边大学",
+        "urls":  [
+                     "http://jwc.ybu.edu.cn"
+                 ],
+        "province":  "吉林"
+    },
+    {
+        "name":  "大连理工大学",
+        "urls":  [
+                     "http://jwc.dlut.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "东北大学",
+        "urls":  [
+                     "http://jwc.neu.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "辽宁大学",
+        "urls":  [
+                     "http://jwc.lnu.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "大连海事大学",
+        "urls":  [
+                     "http://jwc.dlmu.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "沈阳工业大学",
+        "urls":  [
+                     "http://jwc.sut.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "郑州大学",
+        "urls":  [
+                     "http://jwc.zzu.edu.cn"
+                 ],
+        "province":  "河南"
+    },
+    {
+        "name":  "河南大学",
+        "urls":  [
+                     "http://jwc.henu.edu.cn"
+                 ],
+        "province":  "河南"
+    },
+    {
+        "name":  "河南理工大学",
+        "urls":  [
+                     "http://jwc.hpu.edu.cn"
+                 ],
+        "province":  "河南"
+    },
+    {
+        "name":  "河北大学",
+        "urls":  [
+                     "http://jwc.hbu.edu.cn"
+                 ],
+        "province":  "河北"
+    },
+    {
+        "name":  "燕山大学",
+        "urls":  [
+                     "http://jwc.ysu.edu.cn"
+                 ],
+        "province":  "河北"
+    },
+    {
+        "name":  "河北工业大学",
+        "urls":  [
+                     "http://jwc.hebut.edu.cn"
+                 ],
+        "province":  "河北"
+    },
+    {
+        "name":  "华北电力大学",
+        "urls":  [
+                     "http://jwc.ncepu.edu.cn"
+                 ],
+        "province":  "河北"
+    },
+    {
+        "name":  "山西大学",
+        "urls":  [
+                     "http://jwc.sxu.edu.cn"
+                 ],
+        "province":  "山西"
+    },
+    {
+        "name":  "太原理工大学",
+        "urls":  [
+                     "http://jwc.tyut.edu.cn"
+                 ],
+        "province":  "山西"
+    },
+    {
+        "name":  "中北大学",
+        "urls":  [
+                     "http://jwc.nuc.edu.cn"
+                 ],
+        "province":  "山西"
+    },
+    {
+        "name":  "内蒙古大学",
+        "urls":  [
+                     "http://jwc.imu.edu.cn"
+                 ],
+        "province":  "内蒙古"
+    },
+    {
+        "name":  "天津大学",
+        "urls":  [
+                     "http://jwc.tju.edu.cn"
+                 ],
+        "province":  "天津"
+    },
+    {
+        "name":  "南开大学",
+        "urls":  [
+                     "http://jwc.nankai.edu.cn"
+                 ],
+        "province":  "天津"
+    },
+    {
+        "name":  "天津师范大学",
+        "urls":  [
+                     "http://jwc.tjnu.edu.cn"
+                 ],
+        "province":  "天津"
+    },
+    {
+        "name":  "天津工业大学",
+        "urls":  [
+                     "http://jwc.tjpu.edu.cn"
+                 ],
+        "province":  "天津"
+    },
+    {
+        "name":  "西北民族大学",
+        "urls":  [
+                     "http://jwc.xbmu.edu.cn"
+                 ],
+        "province":  "甘肃"
+    },
+    {
+        "name":  "大连大学",
+        "urls":  [
+                     "http://jwc.dlu.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "温州大学",
+        "urls":  [
+                     "http://jwc.wzu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "浙江工商大学",
+        "urls":  [
+                     "http://jwc.zjgsu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "浙江理工大学",
+        "urls":  [
+                     "http://jwc.zstu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "中国计量大学",
+        "urls":  [
+                     "http://jwc.cjlu.edu.cn"
+                 ],
+        "province":  "浙江"
+    },
+    {
+        "name":  "集美大学",
+        "urls":  [
+                     "http://jwc.jmu.edu.cn"
+                 ],
+        "province":  "福建"
+    },
+    {
+        "name":  "福建师范大学",
+        "urls":  [
+                     "http://jwc.fjnu.edu.cn"
+                 ],
+        "province":  "福建"
+    },
+    {
+        "name":  "东北财经大学",
+        "urls":  [
+                     "http://jwc.dufe.edu.cn"
+                 ],
+        "province":  "辽宁"
+    },
+    {
+        "name":  "中国石油大学(华东)",
+        "urls":  [
+                     "http://jwc.upc.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "山东师范大学",
+        "urls":  [
+                     "http://jwc.sdnu.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "济南大学",
+        "urls":  [
+                     "http://jwc.ujn.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "曲阜师范大学",
+        "urls":  [
+                     "http://jwc.qfnu.edu.cn"
+                 ],
+        "province":  "山东"
+    },
+    {
+        "name":  "中国矿业大学(北京)",
+        "urls":  [
+                     "http://jwc.cumtb.edu.cn"
+                 ],
+        "province":  "北京"
+    },
+    {
+        "name":  "石家庄铁道大学",
+        "urls":  [
+                     "https://jw.stdu.edu.cn"
+                 ],
+        "province":  "河北"
+    }
 ]
