@@ -14,7 +14,7 @@ import { COURSE_COLORS } from '../src/shared/constants/theme';
  * 策略: API直取 → 页面DOM提取 → HTML全文回传
  */
 const FETCH_SCRIPT = `
-(function() {
+(async function() {
   try {
     var baseUrl = window.location.origin;
     var pathname = window.location.pathname;
