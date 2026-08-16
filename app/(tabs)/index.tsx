@@ -1,15 +1,18 @@
 import React, { useEffect } from 'react';
-import { View, TouchableOpacity, Text, ActivityIndicator, StatusBar } from 'react-native';
+import { View, TouchableOpacity, Text, ActivityIndicator, StatusBar, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTimetable } from '../../src/features/timetable/store';
 import { WeekHeader } from '../../src/features/timetable/components/WeekHeader';
 import { TimetableGrid } from '../../src/features/timetable/components/TimetableGrid';
+import {
+  isSemesterStarted, getTodayDateLabel, getStartDateLabel, getWeekDayDates,
+} from '../../src/shared/utils/time';
 import type { Course } from '../../src/shared/types';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { courses, currentWeek, loaded, init, setWeek, settings } = useTimetable();
+  const { courses, currentWeek, loaded, init, setWeek, settings, semesterStart } = useTimetable();
   const showWeekends = settings?.showWeekends ?? true;
   const themeColor = settings?.themeColor || '#4A90D9';
   const periodTimes = settings?.periodTimes ?? [];
@@ -24,8 +27,21 @@ export default function HomeScreen() {
     );
   }
 
+  const started = isSemesterStarted(semesterStart);
+  const todayLabel = getTodayDateLabel();
+  const startLabel = getStartDateLabel(semesterStart);
+  const dayDates = getWeekDayDates(semesterStart, currentWeek);
+
   const weekCourses = courses.filter(c => c.weeks.includes(currentWeek));
   const isEmpty = weekCourses.length === 0;
+
+  const openMenu = () => {
+    Alert.alert('菜单', undefined, [
+      { text: '设置', onPress: () => router.push('/(tabs)/settings') },
+      { text: '从教务导入', onPress: () => router.push('/import') },
+      { text: '取消', style: 'cancel' },
+    ]);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -33,9 +49,16 @@ export default function HomeScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <WeekHeader
           currentWeek={currentWeek}
+          totalWeeks={settings?.totalWeeks || 20}
           showWeekends={showWeekends}
+          semesterStarted={started}
+          startLabel={startLabel}
+          todayLabel={todayLabel}
+          dayDates={dayDates}
           onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
           onNext={() => setWeek(currentWeek + 1)}
+          onAdd={() => router.push('/course/add')}
+          onMenu={openMenu}
         />
 
         {isEmpty ? (
@@ -49,24 +72,13 @@ export default function HomeScreen() {
             currentWeek={currentWeek}
             showWeekends={showWeekends}
             periodTimes={periodTimes}
+            semesterStarted={started}
             onCoursePress={(c: Course) => router.push({ pathname: '/course-detail', params: { id: c.id } })}
+            onEmptyPress={(day: number, period: number) =>
+              router.push({ pathname: '/course/add', params: { dayOfWeek: String(day), startPeriod: String(period), endPeriod: String(period) } })
+            }
           />
         )}
-
-        {/* FAB */}
-        <TouchableOpacity
-          onPress={() => router.push('/course/add')}
-          activeOpacity={0.8}
-          style={{
-            position: 'absolute', bottom: 24, right: 20,
-            width: 50, height: 50, borderRadius: 25,
-            backgroundColor: themeColor,
-            alignItems: 'center', justifyContent: 'center',
-            elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4,
-          }}
-        >
-          <Text style={{ color: '#fff', fontSize: 24, lineHeight: 26 }}>+</Text>
-        </TouchableOpacity>
       </SafeAreaView>
     </View>
   );

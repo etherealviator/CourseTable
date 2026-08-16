@@ -6,11 +6,11 @@ interface Props {
   course: Course;
   unitH: number;
   span: number;
+  dimmed?: boolean;
   onPress: (course: Course) => void;
 }
 
-export function CourseCard({ course, unitH, span, onPress }: Props) {
-  // 根据跨节数决定显示多少信息
+export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Props) {
   const showDetail = span >= 2;
 
   return (
@@ -19,39 +19,41 @@ export function CourseCard({ course, unitH, span, onPress }: Props) {
       activeOpacity={0.7}
       style={{
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: dimmed ? '#fafafa' : '#fff',
         borderRadius: 6,
         marginHorizontal: 1,
         marginVertical: 1,
         borderLeftWidth: 3,
-        borderLeftColor: course.color,
-        elevation: 1,
+        borderLeftColor: dimmed ? '#d0d0d0' : course.color,
+        elevation: dimmed ? 0 : 1,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.06,
         shadowRadius: 2,
-        padding: 6,
+        padding: 5,
         justifyContent: 'flex-start',
+        opacity: dimmed ? 0.55 : 1,
       }}
     >
       <Text
-        numberOfLines={span >= 3 ? 2 : 1}
+        numberOfLines={3}
         style={{
           fontSize: 12,
           fontWeight: '600',
-          color: '#1a1a1a',
-          lineHeight: 16,
+          color: dimmed ? '#999' : '#1a1a1a',
+          lineHeight: 15,
         }}
       >
         {course.name}
       </Text>
       {showDetail && course.location && (
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           style={{
             fontSize: 10,
-            color: '#888',
-            marginTop: 3,
+            color: dimmed ? '#bbb' : '#888',
+            marginTop: 2,
+            lineHeight: 13,
           }}
         >
           {course.location}
@@ -62,7 +64,7 @@ export function CourseCard({ course, unitH, span, onPress }: Props) {
           numberOfLines={1}
           style={{
             fontSize: 9,
-            color: '#aaa',
+            color: dimmed ? '#ccc' : '#aaa',
             marginTop: 1,
           }}
         >
