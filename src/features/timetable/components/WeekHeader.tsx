@@ -9,16 +9,16 @@ interface Props {
   semesterStarted: boolean;
   startLabel: string;
   todayLabel: string;
+  daysUntil: number;
   dayDates: number[];
   onPrev: () => void;
   onNext: () => void;
   onAdd: () => void;
-  onMenu: () => void;
 }
 
 export function WeekHeader({
-  currentWeek, totalWeeks, showWeekends, semesterStarted, startLabel, todayLabel, dayDates,
-  onPrev, onNext, onAdd, onMenu,
+  currentWeek, totalWeeks, showWeekends, semesterStarted, startLabel, todayLabel, daysUntil, dayDates,
+  onPrev, onNext, onAdd,
 }: Props) {
   const days = showWeekends ? WEEKDAY_NAMES : WEEKDAY_NAMES.slice(0, 5);
   const labelW = 44;
@@ -42,16 +42,13 @@ export function WeekHeader({
           ) : (
             <>
               <Text style={{ fontSize: 14, fontWeight: '600', color: '#E8590C', letterSpacing: 0.5 }}>学期尚未开始</Text>
-              <Text style={{ fontSize: 10, color: '#999', marginTop: 1 }}>{startLabel}开学</Text>
+              <Text style={{ fontSize: 10, color: '#999', marginTop: 1 }}>{startLabel}开学 · 还有 {daysUntil} 天</Text>
             </>
           )}
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={onMenu} hitSlop={12} style={{ paddingHorizontal: 8 }}>
-            <Text style={{ fontSize: 18, color: '#666', fontWeight: '700' }}>⋮</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onAdd} hitSlop={12} style={{ paddingHorizontal: 4 }}>
+          <TouchableOpacity onPress={onAdd} hitSlop={12} style={{ paddingHorizontal: 8 }}>
             <Text style={{ fontSize: 22, color: '#4A90D9', lineHeight: 24, fontWeight: '600' }}>＋</Text>
           </TouchableOpacity>
         </View>

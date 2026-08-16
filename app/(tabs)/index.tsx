@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { View, TouchableOpacity, Text, ActivityIndicator, StatusBar, Alert } from 'react-native';
+import { View, TouchableOpacity, Text, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTimetable } from '../../src/features/timetable/store';
 import { WeekHeader } from '../../src/features/timetable/components/WeekHeader';
 import { TimetableGrid } from '../../src/features/timetable/components/TimetableGrid';
 import {
-  isSemesterStarted, getTodayDateLabel, getStartDateLabel, getWeekDayDates,
+  isSemesterStarted, getTodayDateLabel, getStartDateLabel, getWeekDayDates, getDaysUntil,
 } from '../../src/shared/utils/time';
 import type { Course } from '../../src/shared/types';
 
@@ -30,18 +30,11 @@ export default function HomeScreen() {
   const started = isSemesterStarted(semesterStart);
   const todayLabel = getTodayDateLabel();
   const startLabel = getStartDateLabel(semesterStart);
+  const daysUntil = getDaysUntil(semesterStart);
   const dayDates = getWeekDayDates(semesterStart, currentWeek);
 
   const weekCourses = courses.filter(c => c.weeks.includes(currentWeek));
   const isEmpty = weekCourses.length === 0;
-
-  const openMenu = () => {
-    Alert.alert('菜单', undefined, [
-      { text: '设置', onPress: () => router.push('/(tabs)/settings') },
-      { text: '从教务导入', onPress: () => router.push('/import') },
-      { text: '取消', style: 'cancel' },
-    ]);
-  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -54,11 +47,11 @@ export default function HomeScreen() {
           semesterStarted={started}
           startLabel={startLabel}
           todayLabel={todayLabel}
+          daysUntil={daysUntil}
           dayDates={dayDates}
           onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
           onNext={() => setWeek(currentWeek + 1)}
           onAdd={() => router.push('/course/add')}
-          onMenu={openMenu}
         />
 
         {isEmpty ? (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Course } from '../../../shared/types';
 
 interface Props {
@@ -13,9 +13,25 @@ interface Props {
 export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Props) {
   const showDetail = span >= 2;
 
+  // 长按查看完整课程信息（灰色态也能看到完整课程名）
+  const showFullInfo = () => {
+    Alert.alert(
+      course.name,
+      [
+        course.teacher ? `教师：${course.teacher}` : '',
+        course.location ? `教室：${course.location}` : '',
+        `节次：第${course.startPeriod}-${course.endPeriod}节`,
+        `周次：${course.weeks.join(',')}`,
+      ].filter(Boolean).join('\n'),
+      [{ text: '查看详情', onPress: () => onPress(course) }, { text: '关闭', style: 'cancel' }]
+    );
+  };
+
   return (
     <TouchableOpacity
       onPress={() => onPress(course)}
+      onLongPress={showFullInfo}
+      delayLongPress={300}
       activeOpacity={0.7}
       style={{
         flex: 1,

@@ -54,13 +54,13 @@ export function TimetableGrid({ courses, currentWeek, showWeekends, periodTimes,
                 }
                 const spanned = dayCourses.find(c => c.startPeriod < period && c.endPeriod >= period);
                 if (spanned) return null;
-                // 空白格：点击添加课程（预填星期/节次）
+                // 空白格：极浅底色，点击添加课程（预填星期/节次）
                 return (
                   <TouchableOpacity
                     key={period}
                     activeOpacity={0.5}
                     onPress={() => onEmptyPress(day, period)}
-                    style={{ height: GRID_H - 2, marginBottom: 2, borderWidth: 0.5, borderColor: '#f0f0f0', borderRadius: 4 }}
+                    style={{ height: GRID_H - 2, marginBottom: 2, backgroundColor: '#fbfbfb', borderRadius: 4 }}
                   />
                 );
               })}

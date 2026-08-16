@@ -18,6 +18,15 @@ export function getTodayDateLabel(): string {
   return `${now.getMonth() + 1}月${now.getDate()}日`;
 }
 
+/** 距开学还有多少天（已开学返回 0） */
+export function getDaysUntil(start: string): number {
+  const s = new Date(start);
+  if (isNaN(s.getTime())) return 0;
+  const now = new Date();
+  const diff = Math.ceil((s.getTime() - now.getTime()) / 86400000);
+  return Math.max(0, diff);
+}
+
 /** 开学日标签：2026年9月1日 */
 export function getStartDateLabel(semesterStart: string): string {
   const d = new Date(semesterStart);
