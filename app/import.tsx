@@ -74,13 +74,28 @@ const FETCH_SCRIPT = `
       for (var g = 0; g < grids.length; g++) {
         var rows = grids[g].querySelectorAll('tbody tr');
         if (rows.length > 3) {
+          // 读表头列名(th)，把 colN 映射成 parseJsonCourses 认识的字段名
+          var headers = [];
+          var ths = grids[g].querySelectorAll('thead th, .ui-jqgrid-htable th, tr:first-child th');
+          for (var h = 0; h < ths.length; h++) headers.push(ths[h].textContent.trim());
           var data = [];
           for (var r = 0; r < rows.length; r++) {
             var cells = rows[r].querySelectorAll('td');
             if (cells.length > 0) {
               var row = {};
               for (var c = 0; c < cells.length; c++) {
-                row['col' + c] = cells[c].textContent.trim();
+                var txt = cells[c].textContent.trim();
+                var colName = 'col' + c;
+                if (headers[c]) {
+                  var hd = headers[c];
+                  if (/课程名称|课程名|课名|kcmc/i.test(hd)) colName = 'kcmc';
+                  else if (/教师|老师|任课|jsxm/i.test(hd)) colName = 'jsxm';
+                  else if (/教室|地点|jsmc|cdmc/i.test(hd)) colName = 'jsmc';
+                  else if (/星期|周几|周次日|xqj/i.test(hd)) colName = 'xqj';
+                  else if (/节次|节数|jcor|skjc/i.test(hd)) colName = 'jcor';
+                  else if (/周次|起止周|上课周|zcd/i.test(hd)) colName = 'zcd';
+                }
+                row[colName] = txt;
               }
               data.push(row);
             }
@@ -321,7 +336,7 @@ export default function ImportScreen() {
     // Fallback: jqGrid
     if (raw.startsWith('__JQGRID__')) {
       try {
-        const items = JSON.parse(raw.slice(9));
+        const items = JSON.parse(raw.slice(10));
         const parsed = parseJsonCourses(items);
         if (parsed.length > 0) { parseAndImport(parsed); return; }
       } catch {}
