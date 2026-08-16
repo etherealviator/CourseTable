@@ -63,7 +63,7 @@ export function WeekHeader({
         {/* 右上角 */}
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
           <TouchableOpacity onPress={onGear} hitSlop={12} style={{ paddingHorizontal: 8 }}>
-            <Text style={{ fontSize: 20, color: headerTextColor }}>⚙️</Text>
+            <Text style={{ fontSize: 20, color: headerTextColor }}>{'\u2699\uFE0E'}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -114,9 +114,10 @@ const FETCH_SCRIPT = `
       return null;
     }
 
-    // === 2.5 找含星期表头的课表表格（不依赖已知class，石铁大适用） ===
-    function findCourseTable(doc) {
-      if (!doc) return null;
+    // === 2.5 找课表表格（收集多个候选，RN侧逐个尝试解析） ===
+    function findCourseTables(doc) {
+      var found = [];
+      if (!doc) return found;
       var tables = doc.querySelectorAll('table');
       for (var i = 0; i < tables.length; i++) {
         try {
@@ -124,15 +125,14 @@ const FETCH_SCRIPT = `
           if (!/星期/.test(txt)) continue;
           if (!/课程|教师|教室|kcmc|jsxm|jsmc/.test(txt)) continue;
           if (tables[i].querySelectorAll('tr').length < 4) continue;
-          // 课表特征: 表头含"节次/时间"（排除实践课记录等字段列表型表格）
-          var firstRow = tables[i].querySelector('tr');
-          var headerTxt = firstRow ? (firstRow.innerText || '') : '';
-          if (!/节次|时间|上课/.test(headerTxt)) continue;
           var html = tables[i].outerHTML;
-          if (html && html.length > 500 && html.length < 200000) return html;
+          if (html && html.length > 500 && html.length < 200000) {
+            found.push(html);
+            if (found.length >= 3) break;
+          }
         } catch(e4) {}
       }
-      return null;
+      return found;
     }
 
     // === 3. 主文档 + iframe 逐层提取（老版正方课表常在 iframe 里） ===
@@ -151,21 +151,22 @@ const FETCH_SCRIPT = `
       }
     } catch(e3) {}
 
-    // === 3.5 课表表格 outerHTML 回传（含"星期"表头的表格，RN 侧 table 策略解析） ===
-    var tableHtml = findCourseTable(document);
-    if (!tableHtml) {
+    // === 3.5 课表表格 outerHTML 回传（多候选，RN 侧逐个解析） ===
+    var tableHtmls = findCourseTables(document);
+    if (!tableHtmls.length) {
       try {
         var frames2 = document.querySelectorAll('iframe');
         for (var f2 = 0; f2 < frames2.length; f2++) {
           var fdoc2 = null;
           try { fdoc2 = frames2[f2].contentDocument || (frames2[f2].contentWindow && frames2[f2].contentWindow.document); } catch(e5) {}
           if (!fdoc2) continue;
-          tableHtml = findCourseTable(fdoc2);
-          if (tableHtml) break;
+          var ths2 = findCourseTables(fdoc2);
+          for (var ti2 = 0; ti2 < ths2.length; ti2++) tableHtmls.push(ths2[ti2]);
+          if (tableHtmls.length >= 3) break;
         }
       } catch(e6) {}
     }
-    if (tableHtml) { postMsg('__TABLEHTML__', tableHtml); return; }
+    if (tableHtmls.length) { postMsg('__TABLEHTMLS__', tableHtmls); return; }
 
     // === 4. API 直取（路径 × 候选学期，第一个非空即返回） ===
     var apiTests = [
@@ -397,15 +398,18 @@ export default function ImportScreen() {
       } catch {}
     }
 
-    // 课表表格 outerHTML：走完整解析链（json/table/td 策略）
-    if (raw.startsWith('__TABLEHTML__')) {
-      const html = raw.slice(13);
-      const parsed = parseCourseTable(html);
-      if (parsed.length > 0) {
-        parseAndImport(parsed.map(p => ({kcmc: p.name, xm: p.teacher, cdmc: p.location, xqj: String(p.dayOfWeek), jcs: p.periods, zcd: p.weeks})));
-        return;
+    // 课表表格 outerHTML（多候选）：逐个走完整解析链（json/table/td 策略）
+    if (raw.startsWith('__TABLEHTMLS__')) {
+      let htmls: string[] = [];
+      try { htmls = JSON.parse(raw.slice(15)); } catch {}
+      for (const html of htmls) {
+        const parsed = parseCourseTable(html);
+        if (parsed.length > 0) {
+          parseAndImport(parsed.map(p => ({kcmc: p.name, xm: p.teacher, cdmc: p.location, xqj: String(p.dayOfWeek), jcs: p.periods, zcd: p.weeks})));
+          return;
+        }
       }
-      Alert.alert('未识别到课程', '表格已找到但解析失败，请改用方式一粘贴课表页内容');
+      Alert.alert('未识别到课程', `已尝试 ${htmls.length} 个表格仍无法识别，请改用方式一粘贴课表页内容`);
       return;
     }
 
