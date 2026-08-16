@@ -349,6 +349,51 @@ export default function ImportScreen() {
     } catch {}
   };
 
+  if (showWebView) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 }}>
+          <TouchableOpacity onPress={() => setShowWebView(false)}>
+            <Text style={{ color: '#4A90D9', fontSize: 14 }}>← 关闭</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 12, color: '#999' }}>登录后点下方抓取</Text>
+        </View>
+
+        <View style={{ flex: 1, overflow: 'hidden' }}>
+          <WebView
+            ref={webRef}
+            source={{ uri: url }}
+            style={{ flex: 1 }}
+            javaScriptEnabled
+            domStorageEnabled
+            setSupportMultipleWindows={false}
+            onShouldStartLoadWithRequest={(request) => {
+              // 教务系统 target=_blank / 新窗口跳转一律留在 WebView 内，不交给系统浏览器
+              return true;
+            }}
+            onMessage={(e) => handleWebViewMessage(e.nativeEvent.data)}
+          />
+        </View>
+
+        <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: '#eee' }}>
+          <TouchableOpacity
+            onPress={() => {
+              setLoading(true);
+              setStatusText('');
+              webRef.current?.injectJavaScript(FETCH_SCRIPT);
+            }}
+            style={{ backgroundColor: '#4A90D9', borderRadius: 8, padding: 12, alignItems: 'center' }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700' }}>
+              {loading ? '⏳ 获取中...' : '📥 一键获取课程数据'}
+            </Text>
+          </TouchableOpacity>
+          {statusText ? <Text style={{ fontSize: 12, color: '#10B981', textAlign: 'center', marginTop: 8 }}>{statusText}</Text> : null}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentContainerStyle={{ padding: 16 }}>
       {/* 步骤提示 */}
@@ -453,47 +498,6 @@ export default function ImportScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* WebView */}
-      {showWebView && (
-        <View style={{ height: 500, marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-            <TouchableOpacity onPress={() => setShowWebView(false)}>
-              <Text style={{ color: '#4A90D9', fontSize: 14 }}>← 关闭</Text>
-            </TouchableOpacity>
-            <Text style={{ fontSize: 11, color: '#999' }}>登录后点下方抓取</Text>
-          </View>
-
-          <View style={{ flex: 1, borderRadius: 12, overflow: 'hidden' }}>
-            <WebView
-              ref={webRef}
-              source={{ uri: url }}
-              style={{ flex: 1 }}
-              javaScriptEnabled
-              domStorageEnabled
-              setSupportMultipleWindows={false}
-              onShouldStartLoadWithRequest={(request) => {
-                // 教务系统 target=_blank / 新窗口跳转一律留在 WebView 内，不交给系统浏览器
-                return true;
-              }}
-              onMessage={(e) => handleWebViewMessage(e.nativeEvent.data)}
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={() => {
-              setLoading(true);
-              setStatusText('');
-              webRef.current?.injectJavaScript(FETCH_SCRIPT);
-            }}
-            style={{ backgroundColor: '#4A90D9', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 8 }}
-          >
-            <Text style={{ color: '#fff', fontWeight: '700' }}>
-              {loading ? '⏳ 获取中...' : '📥 一键获取课程数据'}
-            </Text>
-          </TouchableOpacity>
-          {statusText ? <Text style={{ fontSize: 12, color: '#10B981', textAlign: 'center', marginTop: 4 }}>{statusText}</Text> : null}
-        </View>
-      )}
     </ScrollView>
   );
 }
