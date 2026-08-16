@@ -31,6 +31,7 @@ export function extractName(text: string): string {
   const cleaned = text
     .replace(/[（(][^)）]*[)）]/g, '')
     .replace(/\[\d+[-~]\d+周\]/g, '')
+    .replace(/[★☆○●◆▲△◇■□]/g, '')
     .trim();
 
   // 如果整个文本就是非课程模式, 返回空
@@ -90,6 +91,8 @@ export function extractTeacher(text: string): string {
   for (const w of text.split(/[\s\n;；,，]+/)) {
     const t = w.trim();
     if (!t || t === courseName) continue;
+    // 排除地点前缀词
+    if (/^(本部|东区|西区|南区|北区|新区|新校区|老校区|主校区|东校区|西校区|南校区|北校区)$/.test(t)) continue;
     // 真正的教师名: 2-4个汉字, 不包含数字/特殊字符
     if (/^[\u4e00-\u9fff]{2,4}$/.test(t) && !/^\d+$/.test(t)) {
       // 排除班级名模式（管2304-1这类）
@@ -111,6 +114,9 @@ export function extractLocation(text: string): string {
     if (/^[A-Z]{1,3}\d{3,5}$/i.test(t)) return t.toUpperCase();
     if (/^教\d+[-]\d+$/.test(t)) return t;
     if (/^实\d+$/.test(t)) return t;
+    // 老版正方: "本部 基216" / "东3-101"
+    if (/^[\u4e00-\u9fff]{1,3}\d{2,4}$/.test(t)) return t;
+    if (/^[\u4e00-\u9fff]{1,3}\d+[-]\d+$/.test(t)) return t;
   }
   return '';
 }

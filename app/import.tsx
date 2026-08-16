@@ -128,17 +128,21 @@ const FETCH_SCRIPT = `
     var apiTests = [
       '/kbcx/xskbcx_cxXsgrkb.html?gnmkdm=N2151',
       '/jwglxt/kbcx/xskbcx_cxXsgrkb.html?gnmkdm=N2151',
-      '/kbcx/xskbcx_cxXskbcxIndex.html?gnmkdm=N2151',
-      '/kbcx/xskbcx_cxXskbcxIndex.html',
       '/xskb/xskb_list.do',
       '/teach/student/courseTable',
       '/api/student/courseTable',
       '/student/courseTable/query',
       '/app/std/courseTable/query',
     ];
+    // 只有含课表特征字段的对象才算课表（排除教室/场地等无关数组）
+    function looksLikeCourse(item) {
+      if (!item || typeof item !== 'object') return false;
+      var s = JSON.stringify(item);
+      return /kcmc|xqj|jcor|zcd|jsxm|jsmc|课程名|教师|星期|节次|周次/.test(s);
+    }
     var triedCount = 0;
     for (var p = 0; p < apiTests.length; p++) {
-      var bi = p < 4 ? 0 : (p < 6 ? 1 : 2);
+      var bi = p < 2 ? 0 : (p === 2 ? 1 : 2);
       var terms = (bi === 0) ? termCandidates : (termCandidates.length ? [termCandidates[0]] : []);
       for (var t = 0; t < terms.length; t++) {
         var tc = terms[t];
@@ -160,9 +164,9 @@ const FETCH_SCRIPT = `
             try { obj = JSON.parse(text); } catch(e) {}
             if (obj) {
               if (obj.kbList && obj.kbList.length > 0) { postMsg('__JSON__', obj.kbList); return; }
-              if (Array.isArray(obj) && obj.length > 0) { postMsg('__JSON__', obj); return; }
+              if (Array.isArray(obj) && obj.length > 0 && looksLikeCourse(obj[0])) { postMsg('__JSON__', obj); return; }
               for (var k in obj) {
-                if (Array.isArray(obj[k]) && obj[k].length > 0 && typeof obj[k][0] === 'object') {
+                if (Array.isArray(obj[k]) && obj[k].length > 0 && typeof obj[k][0] === 'object' && looksLikeCourse(obj[k][0])) {
                   postMsg('__JSON__', obj[k]); return;
                 }
               }
