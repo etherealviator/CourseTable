@@ -16,6 +16,8 @@ import { COURSE_COLORS } from '../src/shared/constants/theme';
 const FETCH_SCRIPT = `
 (async function() {
   try {
+    // 执行确认——注入成功与否一眼可见
+    window.ReactNativeWebView.postMessage('__START__');
     var baseUrl = window.location.origin;
     var pathname = window.location.pathname;
 
@@ -313,6 +315,11 @@ export default function ImportScreen() {
   const handleWebViewMessage = (raw: string) => {
     setLoading(false);
 
+    if (raw.startsWith('__START__')) {
+      setStatusText('✓ 脚本已执行');
+      return;
+    }
+
     if (raw.startsWith('__INFO__')) {
       setStatusText(raw.slice(7));
       // 诊断信息强制弹窗可见——API 直取失败原因就藏在这里
@@ -364,6 +371,9 @@ export default function ImportScreen() {
       if (Array.isArray(data)) { parseAndImport(data); return; }
       if (data.kbList) { parseAndImport(data.kbList); return; }
     } catch {}
+
+    // 未识别的消息：显示原文帮助诊断
+    Alert.alert('收到未识别消息', (raw || '').slice(0, 200));
   };
 
   if (showWebView) {
