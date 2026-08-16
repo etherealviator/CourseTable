@@ -11,7 +11,9 @@ interface Props {
 }
 
 export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Props) {
-  const showDetail = span >= 2;
+  // 层级排布: 课程名(完整不省略) → 教师 → @教室
+  const showTeacher = span >= 2;
+  const showLocation = span >= 1;
 
   // 长按查看完整课程信息（灰色态也能看到完整课程名）
   const showFullInfo = () => {
@@ -51,8 +53,9 @@ export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Pro
         opacity: dimmed ? 0.55 : 1,
       }}
     >
+      {/* 课程名 — 完整显示，不强制省略号 */}
       <Text
-        numberOfLines={3}
+        numberOfLines={0}
         style={{
           fontSize: 12,
           fontWeight: '600',
@@ -62,29 +65,30 @@ export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Pro
       >
         {course.name}
       </Text>
-      {showDetail && course.location && (
-        <Text
-          numberOfLines={2}
-          style={{
-            fontSize: 10,
-            color: dimmed ? '#bbb' : '#888',
-            marginTop: 2,
-            lineHeight: 13,
-          }}
-        >
-          {course.location}
-        </Text>
-      )}
-      {span >= 3 && course.teacher && (
+      {showTeacher && course.teacher && (
         <Text
           numberOfLines={1}
           style={{
-            fontSize: 9,
-            color: dimmed ? '#ccc' : '#aaa',
-            marginTop: 1,
+            fontSize: 9.5,
+            color: dimmed ? '#bbb' : '#777',
+            marginTop: 2,
+            lineHeight: 12,
           }}
         >
           {course.teacher}
+        </Text>
+      )}
+      {showLocation && course.location && (
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: 10,
+            color: dimmed ? '#bbb' : '#888',
+            marginTop: 1,
+            lineHeight: 13,
+          }}
+        >
+          @{course.location}
         </Text>
       )}
     </TouchableOpacity>

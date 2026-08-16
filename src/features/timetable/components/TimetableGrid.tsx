@@ -10,29 +10,40 @@ interface Props {
   showWeekends: boolean;
   periodTimes: string[];
   semesterStarted: boolean;
+  isDark: boolean;
   onCoursePress: (course: Course) => void;
   onEmptyPress: (day: number, period: number) => void;
+  onEditTime: (periodIndex: number, current: string) => void;
 }
 
-const GRID_H = 58;
-const LABEL_W = 46;
+const GRID_H = 60;
+const LABEL_W = 48;
 
-export function TimetableGrid({ courses, currentWeek, showWeekends, periodTimes, semesterStarted, onCoursePress, onEmptyPress }: Props) {
+export function TimetableGrid({
+  courses, currentWeek, showWeekends, periodTimes, semesterStarted, isDark,
+  onCoursePress, onEmptyPress, onEditTime,
+}: Props) {
   const weekCourses = courses.filter(c => c.weeks.includes(currentWeek));
   const days = showWeekends ? [1, 2, 3, 4, 5, 6, 7] : [1, 2, 3, 4, 5];
   const times = parsePeriodTimes(periodTimes);
+  const bg = isDark ? '#1C1C1E' : '#fff';
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={{ flex: 1, backgroundColor: bg }} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row' }}>
-        {/* 时间轴 — 显示完整时间段 08:00-08:45 */}
+        {/* 时间轴 — 点按时间数字原地编辑 */}
         <View style={{ width: LABEL_W, paddingTop: 4 }}>
           {times.map((t, i) => (
-            <View key={i} style={{ height: GRID_H, justifyContent: 'flex-start', alignItems: 'center', paddingTop: 4 }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#888' }}>{i + 1}</Text>
-              <Text style={{ fontSize: 8, color: '#bbb', marginTop: 1 }}>{t[0]}</Text>
-              <Text style={{ fontSize: 8, color: '#ccc' }}>{t[1]}</Text>
-            </View>
+            <TouchableOpacity
+              key={i}
+              activeOpacity={0.5}
+              onPress={() => onEditTime(i, periodTimes[i] || `${t[0]}-${t[1]}`)}
+              style={{ height: GRID_H, justifyContent: 'flex-start', alignItems: 'center', paddingTop: 4 }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#aaa' : '#888' }}>{i + 1}</Text>
+              <Text style={{ fontSize: 8, color: isDark ? '#777' : '#bbb', marginTop: 1 }}>{t[0]}</Text>
+              <Text style={{ fontSize: 8, color: isDark ? '#666' : '#ccc' }}>{t[1]}</Text>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -60,7 +71,7 @@ export function TimetableGrid({ courses, currentWeek, showWeekends, periodTimes,
                     key={period}
                     activeOpacity={0.5}
                     onPress={() => onEmptyPress(day, period)}
-                    style={{ height: GRID_H - 2, marginBottom: 2, backgroundColor: '#fbfbfb', borderRadius: 4 }}
+                    style={{ height: GRID_H - 2, marginBottom: 2, backgroundColor: isDark ? '#262629' : '#fbfbfb', borderRadius: 4 }}
                   />
                 );
               })}
