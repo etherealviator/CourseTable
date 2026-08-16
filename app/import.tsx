@@ -315,6 +315,8 @@ export default function ImportScreen() {
 
     if (raw.startsWith('__INFO__')) {
       setStatusText(raw.slice(7));
+      // 诊断信息强制弹窗可见——API 直取失败原因就藏在这里
+      Alert.alert('获取失败（诊断）', raw.slice(7));
       return;
     }
 
