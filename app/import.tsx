@@ -39,29 +39,35 @@ const FETCH_SCRIPT = `
       seenTerms[k] = true;
       termCandidates.push([xn, xq]);
     }
-    // 页面下拉优先
+    // 页面下拉优先（正方 xnm=学年 xqm=学期，石铁大 3=秋/12=春/16=夏）
+    var xnSel = null, xqSel = null;
     try {
       var s1 = document.querySelector('select[name=xnm],select[name=XN],select[name=xn]');
       var s2 = document.querySelector('select[name=xqm],select[name=XQ],select[name=xq]');
-      if (s1 && s1.value) {
-        var xn = s1.value, xq = (s2 && s2.value) ? s2.value : ((m >= 2 && m <= 7) ? '3' : '12');
-        pushTerm(xn, xq);
-      }
+      if (s1 && s1.value) xnSel = s1.value;
+      if (s2 && s2.value) xqSel = s2.value;
     } catch(e) {}
-    // 按日期推断: 8月最可能查下学期(新学年秋), 9月后查本学年秋, 2-7月查本学年春
-    if (m === 8) {
-      pushTerm(String(y), '12');        // 新学年秋 (如 2026-2027-1)
-      pushTerm(String(y - 1), '12');    // 本学年秋
-      pushTerm(String(y - 1), '3');     // 本学年春
-    } else if (m >= 9) {
-      pushTerm(String(y - 1), '12');
-      pushTerm(String(y - 1), '3');
-    } else if (m >= 2 && m <= 7) {
-      pushTerm(String(y - 1), '3');
-      pushTerm(String(y - 1), '12');
-    } else { // 1月
-      pushTerm(String(y - 1), '12');
-      pushTerm(String(y - 1), '3');
+    if (xnSel) {
+      var xq1 = xqSel || '3';
+      pushTerm(xnSel, xq1);                     // 页面选中项（石铁大: 2026-2027秋 = xnm=2026 xqm=3）
+      pushTerm(String(parseInt(xnSel, 10) - 1), xq1); // 上一学年同学期
+      pushTerm(xnSel, xq1 === '3' ? '12' : '3');      // 同学年另一学期
+    } else {
+      // 无下拉时的日期推断
+      if (m === 8) {
+        pushTerm(String(y), '3');         // 下学期(新学年秋)
+        pushTerm(String(y - 1), '3');     // 本学年秋
+        pushTerm(String(y - 1), '12');    // 本学年春
+      } else if (m >= 9) {
+        pushTerm(String(y - 1), '3');
+        pushTerm(String(y - 1), '12');
+      } else if (m >= 2 && m <= 7) {
+        pushTerm(String(y - 1), '12');
+        pushTerm(String(y - 1), '3');
+      } else { // 1月
+        pushTerm(String(y - 1), '3');
+        pushTerm(String(y - 1), '12');
+      }
     }
 
     // === 2. 扫描文档(含 iframe)里的课表 ===
@@ -108,6 +114,23 @@ const FETCH_SCRIPT = `
       return null;
     }
 
+    // === 2.5 找含星期表头的课表表格（不依赖已知class，石铁大适用） ===
+    function findCourseTable(doc) {
+      if (!doc) return null;
+      var tables = doc.querySelectorAll('table');
+      for (var i = 0; i < tables.length; i++) {
+        try {
+          var txt = tables[i].innerText || '';
+          if (!/星期|周[一二三四五六日天]/.test(txt)) continue;
+          if (!/课程|教师|教室|kcmc|jsxm|jsmc/.test(txt)) continue;
+          if (tables[i].querySelectorAll('tr').length < 4) continue;
+          var html = tables[i].outerHTML;
+          if (html && html.length > 500 && html.length < 200000) return html;
+        } catch(e4) {}
+      }
+      return null;
+    }
+
     // === 3. 主文档 + iframe 逐层提取（老版正方课表常在 iframe 里） ===
     var pageData = scanDoc(document);
     if (pageData) { postMsg('__JQGRID__', pageData); return; }
@@ -123,6 +146,22 @@ const FETCH_SCRIPT = `
         if (fdata) { postMsg('__JQGRID__', fdata); return; }
       }
     } catch(e3) {}
+
+    // === 3.5 课表表格 outerHTML 回传（含"星期"表头的表格，RN 侧 table 策略解析） ===
+    var tableHtml = findCourseTable(document);
+    if (!tableHtml) {
+      try {
+        var frames2 = document.querySelectorAll('iframe');
+        for (var f2 = 0; f2 < frames2.length; f2++) {
+          var fdoc2 = null;
+          try { fdoc2 = frames2[f2].contentDocument || (frames2[f2].contentWindow && frames2[f2].contentWindow.document); } catch(e5) {}
+          if (!fdoc2) continue;
+          tableHtml = findCourseTable(fdoc2);
+          if (tableHtml) break;
+        }
+      } catch(e6) {}
+    }
+    if (tableHtml) { postMsg('__TABLEHTML__', tableHtml); return; }
 
     // === 4. API 直取（路径 × 候选学期，第一个非空即返回） ===
     var apiTests = [
@@ -176,11 +215,10 @@ const FETCH_SCRIPT = `
       }
     }
 
-    // === 5. 诊断 + 回退：发送页面HTML ===
+    // === 5. 诊断（不再回传整页HTML——postMessage 大消息会截断损坏） ===
     var termInfo = [];
     for (var ti = 0; ti < termCandidates.length; ti++) termInfo.push(termCandidates[ti][0] + '学年第' + termCandidates[ti][1] + '学期');
-    postMsg('__INFO__', 'API直取失败(已尝试' + triedCount + '次请求)，候选学期: ' + termInfo.join(' / ') + '，回退HTML解析');
-    postMsg('__HTML__', document.documentElement.outerHTML);
+    postMsg('__INFO__', 'API直取失败(已尝试' + triedCount + '次请求)，候选学期: ' + termInfo.join(' / ') + '。可改用方式一：复制课表页HTML粘贴导入');
   } catch(e) {
     window.ReactNativeWebView.postMessage('__ERR__' + '脚本异常: ' + e.message);
   }
@@ -353,6 +391,18 @@ export default function ImportScreen() {
         const parsed = parseJsonCourses(items);
         if (parsed.length > 0) { parseAndImport(parsed); return; }
       } catch {}
+    }
+
+    // 课表表格 outerHTML：走完整解析链（json/table/td 策略）
+    if (raw.startsWith('__TABLEHTML__')) {
+      const html = raw.slice(13);
+      const parsed = parseCourseTable(html);
+      if (parsed.length > 0) {
+        parseAndImport(parsed.map(p => ({kcmc: p.name, xm: p.teacher, cdmc: p.location, xqj: String(p.dayOfWeek), jcs: p.periods, zcd: p.weeks})));
+        return;
+      }
+      Alert.alert('未识别到课程', '表格已找到但解析失败，请改用方式一粘贴课表页内容');
+      return;
     }
 
     // HTML 回退：用 table 解析器
