@@ -26,30 +26,51 @@ const FETCH_SCRIPT = `
       window.ReactNativeWebView.postMessage('__ERR__' + text);
     }
 
-    // === 1. 确定学年学期 ===
+    // === 1. 候选学年学期（依次尝试，取第一个有数据的） ===
     var now = new Date();
     var y = now.getFullYear(), m = now.getMonth() + 1;
-    var termStartY = (m >= 9) ? y : y - 1;
-    var term = (m >= 2 && m <= 7) ? '3' : (m >= 9 ? '12' : '12');
+    var termCandidates = [];
+    var seenTerms = {};
+    function pushTerm(xn, xq) {
+      var k = xn + '|' + xq;
+      if (seenTerms[k]) return;
+      seenTerms[k] = true;
+      termCandidates.push([xn, xq]);
+    }
+    // 页面下拉优先
     try {
       var s1 = document.querySelector('select[name=xnm],select[name=XN],select[name=xn]');
-      if (s1 && s1.value) { termStartY = s1.value; }
       var s2 = document.querySelector('select[name=xqm],select[name=XQ],select[name=xq]');
-      if (s2 && s2.value) { term = s2.value; }
+      if (s1 && s1.value) {
+        var xn = s1.value, xq = (s2 && s2.value) ? s2.value : ((m >= 2 && m <= 7) ? '3' : '12');
+        pushTerm(xn, xq);
+      }
     } catch(e) {}
-
-    // === 2. 检查当前页面是否已有课表 ===
-    function hasCourseTable() {
-      var body = document.body.innerText;
-      if (/课程名称|kcmc|高等数学|大学英语|大学物理|毛泽东思想/.test(body)) return true;
-      if (document.querySelector('.course-table, .kbTable, #kbTable, .grid-layout, .kb_content')) return true;
-      return false;
+    // 按日期推断: 8月最可能查下学期(新学年秋), 9月后查本学年秋, 2-7月查本学年春
+    if (m === 8) {
+      pushTerm(String(y), '12');        // 新学年秋 (如 2026-2027-1)
+      pushTerm(String(y - 1), '12');    // 本学年秋
+      pushTerm(String(y - 1), '3');     // 本学年春
+    } else if (m >= 9) {
+      pushTerm(String(y - 1), '12');
+      pushTerm(String(y - 1), '3');
+    } else if (m >= 2 && m <= 7) {
+      pushTerm(String(y - 1), '3');
+      pushTerm(String(y - 1), '12');
+    } else { // 1月
+      pushTerm(String(y - 1), '12');
+      pushTerm(String(y - 1), '3');
     }
 
-    // === 3. 直接从页面提取（如果有课表） ===
-    if (hasCourseTable()) {
-      // jqGrid
-      var grids = document.querySelectorAll('.ui-jqgrid-btable, table.kbTable, table#kbTable');
+    // === 2. 扫描文档(含 iframe)里的课表 ===
+    function scanDoc(doc) {
+      if (!doc || !doc.body) return null;
+      var body = doc.body.innerText || '';
+      if (!/课程名称|kcmc|高等数学|大学英语|大学物理|毛泽东思想/.test(body) &&
+          !doc.querySelector('.course-table, .kbTable, #kbTable, #kbtable, .grid-layout, .kb_content, .ui-jqgrid-btable, .report_tSxsgrkbcx')) {
+        return null;
+      }
+      var grids = doc.querySelectorAll('.ui-jqgrid-btable, table.kbTable, table#kbTable, table#kbtable, .report_tSxsgrkbcx');
       for (var g = 0; g < grids.length; g++) {
         var rows = grids[g].querySelectorAll('tbody tr');
         if (rows.length > 3) {
@@ -64,12 +85,29 @@ const FETCH_SCRIPT = `
               data.push(row);
             }
           }
-          if (data.length > 0) { postMsg('__JQGRID__', data); return; }
+          if (data.length > 0) return data;
         }
       }
+      return null;
     }
 
-    // === 4. API 直取 ===
+    // === 3. 主文档 + iframe 逐层提取（老版正方课表常在 iframe 里） ===
+    var pageData = scanDoc(document);
+    if (pageData) { postMsg('__JQGRID__', pageData); return; }
+    try {
+      var frames = document.querySelectorAll('iframe');
+      for (var f = 0; f < frames.length; f++) {
+        var fdoc = null;
+        try {
+          fdoc = frames[f].contentDocument || (frames[f].contentWindow && frames[f].contentWindow.document);
+        } catch(e2) {}
+        if (!fdoc) continue;
+        var fdata = scanDoc(fdoc);
+        if (fdata) { postMsg('__JQGRID__', fdata); return; }
+      }
+    } catch(e3) {}
+
+    // === 4. API 直取（路径 × 候选学期，第一个非空即返回） ===
     var apiTests = [
       '/kbcx/xskbcx_cxXsgrkb.html?gnmkdm=N2151',
       '/jwglxt/kbcx/xskbcx_cxXsgrkb.html?gnmkdm=N2151',
@@ -81,38 +119,46 @@ const FETCH_SCRIPT = `
       '/student/courseTable/query',
       '/app/std/courseTable/query',
     ];
-    var bodies = [
-      'xnm=' + termStartY + '&xqm=' + term + '&kzlx=ck',
-      'xnxq=' + termStartY + term + '&showType=detail',
-      'year=' + termStartY + '&term=' + term + '&semester=' + term,
-    ];
-
+    var triedCount = 0;
     for (var p = 0; p < apiTests.length; p++) {
-      try {
-        var resp = await fetch(baseUrl + apiTests[p], {
-          method: 'POST', credentials: 'include',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: bodies[p < 4 ? 0 : (p < 6 ? 1 : 2)]
-        });
-        if (resp.ok) {
-          var text = await resp.text();
-          if (!text || text.length < 10) continue;
-          var obj = null;
-          try { obj = JSON.parse(text); } catch(e) {}
-          if (obj) {
-            if (obj.kbList && obj.kbList.length > 0) { postMsg('__JSON__', obj.kbList); return; }
-            if (Array.isArray(obj) && obj.length > 0) { postMsg('__JSON__', obj); return; }
-            for (var k in obj) {
-              if (Array.isArray(obj[k]) && obj[k].length > 0 && typeof obj[k][0] === 'object') {
-                postMsg('__JSON__', obj[k]); return;
+      var bi = p < 4 ? 0 : (p < 6 ? 1 : 2);
+      var terms = (bi === 0) ? termCandidates : (termCandidates.length ? [termCandidates[0]] : []);
+      for (var t = 0; t < terms.length; t++) {
+        var tc = terms[t];
+        var body;
+        if (bi === 0) body = 'xnm=' + tc[0] + '&xqm=' + tc[1] + '&kzlx=ck';
+        else if (bi === 1) body = 'xnxq=' + tc[0] + tc[1] + '&showType=detail';
+        else body = 'year=' + tc[0] + '&term=' + tc[1] + '&semester=' + tc[1];
+        triedCount++;
+        try {
+          var resp = await fetch(baseUrl + apiTests[p], {
+            method: 'POST', credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: body
+          });
+          if (resp.ok) {
+            var text = await resp.text();
+            if (!text || text.length < 10) continue;
+            var obj = null;
+            try { obj = JSON.parse(text); } catch(e) {}
+            if (obj) {
+              if (obj.kbList && obj.kbList.length > 0) { postMsg('__JSON__', obj.kbList); return; }
+              if (Array.isArray(obj) && obj.length > 0) { postMsg('__JSON__', obj); return; }
+              for (var k in obj) {
+                if (Array.isArray(obj[k]) && obj[k].length > 0 && typeof obj[k][0] === 'object') {
+                  postMsg('__JSON__', obj[k]); return;
+                }
               }
             }
           }
-        }
-      } catch(e) {}
+        } catch(e) {}
+      }
     }
 
-    // === 5. 回退：发送页面HTML ===
+    // === 5. 诊断 + 回退：发送页面HTML ===
+    var termInfo = [];
+    for (var ti = 0; ti < termCandidates.length; ti++) termInfo.push(termCandidates[ti][0] + '学年第' + termCandidates[ti][1] + '学期');
+    postMsg('__INFO__', 'API直取失败(已尝试' + triedCount + '次请求)，候选学期: ' + termInfo.join(' / ') + '，回退HTML解析');
     postMsg('__HTML__', document.documentElement.outerHTML);
   } catch(e) {
     window.ReactNativeWebView.postMessage('__ERR__' + '脚本异常: ' + e.message);
@@ -167,29 +213,41 @@ export default function ImportScreen() {
         let dayOfWeek = parseInt(item.xqj || item.day || item['星期'] || '1');
         if (isNaN(dayOfWeek) || dayOfWeek < 1 || dayOfWeek > 7) dayOfWeek = 1;
 
-        // 节次: "3-4" 或 "3" 格式
+        // 节次: "3-4" / "3" / "0102"(四位数字) / "1-2节" 格式
         let periods = item.jcs || item.jcor || item.sections || item['节次'] || '';
         let startPeriod = 1, endPeriod = 2;
         const pm = periods.match(/(\d+)\s*[-~]\s*(\d+)/);
         if (pm) {
           startPeriod = parseInt(pm[1]);
           endPeriod = parseInt(pm[2]);
+        } else if (/^\d{4}$/.test(periods)) {
+          // 正方老版 "0102" = 第1-2节
+          startPeriod = parseInt(periods.slice(0, 2), 10);
+          endPeriod = parseInt(periods.slice(2), 10);
+          if (!endPeriod || endPeriod < startPeriod) endPeriod = startPeriod;
         } else if (periods) {
           startPeriod = parseInt(periods) || 1;
           endPeriod = startPeriod;
         }
 
-        // 周次: "1-16周" "1-16周(单)" "1,3,5"
+        // 周次: "1-16周" "1-16周(单)" "1,3,5,7" "1-16周{第1-16周|单周}"
         let weeks: number[] = [];
         const weekStr = item.zcd || item.weeks || item['周次'] || '';
-        const wRange = weekStr.match(/(\d+)\s*[-~]\s*(\d+)/);
-        if (wRange) {
-          const isOdd = /单/.test(weekStr);
-          const isEven = /双/.test(weekStr);
-          for (let i = parseInt(wRange[1]); i <= parseInt(wRange[2]); i++) {
-            if (isOdd && i % 2 === 0) continue;
-            if (isEven && i % 2 === 1) continue;
-            weeks.push(i);
+        // 逗号枚举
+        if (/[,，]/.test(weekStr)) {
+          const nums = weekStr.match(/\d+/g);
+          if (nums) weeks = nums.map((n: string) => parseInt(n)).filter((n: number) => n >= 1 && n <= 30);
+        }
+        if (weeks.length === 0) {
+          const wRange = weekStr.match(/(\d+)\s*[-~]\s*(\d+)/);
+          if (wRange) {
+            const isOdd = /单/.test(weekStr);
+            const isEven = /双/.test(weekStr);
+            for (let i = parseInt(wRange[1]); i <= parseInt(wRange[2]); i++) {
+              if (isOdd && i % 2 === 0) continue;
+              if (isEven && i % 2 === 1) continue;
+              weeks.push(i);
+            }
           }
         }
         if (weeks.length === 0) {
@@ -239,6 +297,11 @@ export default function ImportScreen() {
 
   const handleWebViewMessage = (raw: string) => {
     setLoading(false);
+
+    if (raw.startsWith('__INFO__')) {
+      setStatusText(raw.slice(7));
+      return;
+    }
 
     if (raw.startsWith('__JSON__')) {
       try {
@@ -407,6 +470,11 @@ export default function ImportScreen() {
               style={{ flex: 1 }}
               javaScriptEnabled
               domStorageEnabled
+              setSupportMultipleWindows={false}
+              onShouldStartLoadWithRequest={(request) => {
+                // 教务系统 target=_blank / 新窗口跳转一律留在 WebView 内，不交给系统浏览器
+                return true;
+              }}
               onMessage={(e) => handleWebViewMessage(e.nativeEvent.data)}
             />
           </View>

@@ -8,6 +8,8 @@
  *   ...
  * ]
  */
+import { ParsedCourse } from '../../../../shared/types';
+
 export function parseGridStrategy(input: string): ParsedCourse[] {
   let data: unknown[];
   try { data = JSON.parse(input); } catch { return []; }

@@ -38,6 +38,7 @@ export function extractName(text: string): string {
 
   const words = cleaned.split(/[\s\n;；,，]+/).filter(w => w.trim().length > 0);
   let best = '';
+  let bestScore = 0;
 
   for (const w of words) {
     const t = w.trim();
@@ -52,8 +53,13 @@ export function extractName(text: string): string {
     if (/^[\u4e00-\u9fff]+\d{3,}[-]\d+$/.test(t)) continue;
     if (/^\d{8,}$/.test(t)) continue;
 
-    if (/[\u4e00-\u9fff]/.test(t) && t.length > best.length) {
+    // 评分: 汉字权重 2、字母 1，数字不计——防止 "教1-201"(6字符) 靠字符数压过 "高等数学A"(5字符)
+    const cnLen = (t.match(/[\u4e00-\u9fff]/g) || []).length;
+    const alphaLen = (t.match(/[a-zA-Z]/g) || []).length;
+    const score = cnLen * 2 + alphaLen;
+    if (/[\u4e00-\u9fff]/.test(t) && score > bestScore) {
       best = t;
+      bestScore = score;
     }
   }
 
@@ -77,9 +83,13 @@ export function extractTeacher(text: string): string {
   const m = text.match(/(?:教师|老师|任课|主讲|授课教师)[：:]\s*(\S{2,4})/);
   if (m) return m[1];
 
+  // 先算出课程名并跳过它——避免把课程名当教师
+  // 典型单元格: "高等数学A\n张三\n1-16周\n教1-201"，第一个2-4字token是课程名而非教师
+  const courseName = extractName(text);
+
   for (const w of text.split(/[\s\n;；,，]+/)) {
     const t = w.trim();
-    if (!t) continue;
+    if (!t || t === courseName) continue;
     // 真正的教师名: 2-4个汉字, 不包含数字/特殊字符
     if (/^[\u4e00-\u9fff]{2,4}$/.test(t) && !/^\d+$/.test(t)) {
       // 排除班级名模式（管2304-1这类）
@@ -114,8 +124,16 @@ export function extractPeriods(text: string): string {
   return '';
 }
 
-/** 提取周次范围 */
+/** 提取周次范围 — 兼容 "1-16周" / "1,3,5,7周" / "1-16周(单)" / "1-16周{第1-16周|单周}" */
 export function extractWeeks(text: string): string {
+  // 单双周标记（保留在返回值里，供下游判断）
+  const parity = /单周|\(单\)|（单）|\|单周/.test(text) ? '单'
+    : (/双周|\(双\)|（双）|\|双周/.test(text) ? '双' : '');
+
+  // 逗号枚举: "1,3,5,7,9周" / "第1,3,5,7周"
+  const comma = text.match(/(\d+(?:\s*[,，]\s*\d+)+)\s*周/);
+  if (comma) return comma[1].replace(/[\s,，]+/g, ',');
+
   const patterns = [
     /(\d+)\s*[-~]\s*(\d+)\s*周/,
     /第(\d+)\s*[-~]\s*(\d+)\s*周/,
@@ -124,7 +142,7 @@ export function extractWeeks(text: string): string {
   ];
   for (const p of patterns) {
     const m = text.match(p);
-    if (m) return `${m[1]}-${m[2]}`;
+    if (m) return parity ? `${m[1]}-${m[2]}${parity}` : `${m[1]}-${m[2]}`;
   }
   return '';
 }
