@@ -86,8 +86,7 @@ export default function HomeScreen() {
           isDark={isDark}
           onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
           onNext={() => setWeek(currentWeek + 1)}
-          onAdd={() => router.push('/course/add')}
-          onMenu={() => setMenuVisible(true)}
+          onGear={() => setMenuVisible(true)}
         />
 
         {isEmpty ? (
@@ -157,6 +156,23 @@ export default function HomeScreen() {
                 <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>应用</Text>
               </TouchableOpacity>
             </View>
+
+            {/* 完整入口 */}
+            <View style={{ height: 1, backgroundColor: isDark ? '#3A3A3C' : '#eee', marginVertical: 14 }} />
+            <TouchableOpacity
+              onPress={() => { setMenuVisible(false); router.push('/settings'); }}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}
+            >
+              <Text style={{ fontSize: 15, color: sheetText }}>⚙️ 完整设置</Text>
+              <Text style={{ marginLeft: 'auto', fontSize: 15, color: '#ccc' }}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => { setMenuVisible(false); router.push('/import'); }}
+              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}
+            >
+              <Text style={{ fontSize: 15, color: sheetText }}>📥 从教务导入课程表</Text>
+              <Text style={{ marginLeft: 'auto', fontSize: 15, color: '#ccc' }}>›</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>

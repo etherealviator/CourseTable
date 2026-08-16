@@ -64,6 +64,7 @@ export default function RootLayout() {
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: '设置' }} />
             <Stack.Screen name="course-detail" options={{ presentation: 'modal', headerShown: true, headerTitle: '课程详情' }} />
             <Stack.Screen name="import" options={{ presentation: 'modal', headerShown: true, headerTitle: '导入课程表' }} />
           </Stack>

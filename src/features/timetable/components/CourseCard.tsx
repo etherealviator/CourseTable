@@ -38,9 +38,6 @@ export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Pro
       style={{
         flex: 1,
         backgroundColor: 'transparent',
-        borderRadius: 4,
-        marginHorizontal: 1,
-        marginVertical: 1,
         borderLeftWidth: 3,
         borderLeftColor: dimmed ? '#d0d0d0' : course.color,
         padding: 5,

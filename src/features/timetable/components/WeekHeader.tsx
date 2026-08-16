@@ -14,13 +14,12 @@ interface Props {
   isDark: boolean;
   onPrev: () => void;
   onNext: () => void;
-  onAdd: () => void;
-  onMenu: () => void;
+  onGear: () => void;
 }
 
 export function WeekHeader({
   currentWeek, totalWeeks, showWeekends, semesterStarted, startLabel, todayLabel, daysUntil, dayDates, isDark,
-  onPrev, onNext, onAdd, onMenu,
+  onPrev, onNext, onGear,
 }: Props) {
   const days = showWeekends ? WEEKDAY_NAMES : WEEKDAY_NAMES.slice(0, 5);
   const labelW = 48;
@@ -63,11 +62,8 @@ export function WeekHeader({
 
         {/* 右上角 */}
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-          <TouchableOpacity onPress={onMenu} hitSlop={12} style={{ paddingHorizontal: 8 }}>
-            <Text style={{ fontSize: 18, color: isDark ? '#aaa' : '#666', fontWeight: '700' }}>⋮</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onAdd} hitSlop={12} style={{ paddingHorizontal: 8 }}>
-            <Text style={{ fontSize: 22, color: '#4A90D9', lineHeight: 24, fontWeight: '600' }}>＋</Text>
+          <TouchableOpacity onPress={onGear} hitSlop={12} style={{ paddingHorizontal: 8 }}>
+            <Text style={{ fontSize: 20, color: isDark ? '#aaa' : '#666' }}>⚙️</Text>
           </TouchableOpacity>
         </View>
       </View>

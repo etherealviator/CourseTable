@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useTimetable } from '../../src/features/timetable/store';
+import { useTimetable } from '../src/features/timetable/store';
 
 export default function SettingsScreen() {
   const router = useRouter();
