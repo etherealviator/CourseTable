@@ -26,7 +26,7 @@ export interface PeriodTime {
   end: string;
 }
 
-export type ThemeMode = 'auto' | 'light' | 'dark';
+export type ThemeMode = 'auto' | 'light' | 'dark' | 'blue' | 'green' | 'orange' | 'purple' | 'pink' | 'red';
 
 export interface AppSettings {
   semesterStart: string;

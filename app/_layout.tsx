@@ -5,6 +5,7 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { useColorScheme, View, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTimetable } from '../src/features/timetable/store';
+import { getThemePreset } from '../src/shared/constants/theme';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
@@ -27,20 +28,17 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError:
 }
 
 export default function RootLayout() {
-  const systemScheme = useColorScheme();
   const { settings } = useTimetable();
-  const themeColor = settings?.themeColor || '#4A90D9';
-
-  const isDark = settings?.themeMode === 'auto'
-    ? systemScheme === 'dark'
-    : settings?.themeMode === 'dark';
+  const theme = getThemePreset(settings?.themeMode);
+  const themeColor = theme.accent;
+  const isDark = theme.mode === 'dark';
 
   const lightTheme = {
     ...MD3LightTheme,
     colors: {
       ...MD3LightTheme.colors,
       primary: themeColor,
-      background: '#F5F5F7',
+      background: theme.bg,
       surface: '#FFFFFF',
     },
   };
@@ -50,7 +48,7 @@ export default function RootLayout() {
     colors: {
       ...MD3DarkTheme.colors,
       primary: themeColor,
-      background: '#000000',
+      background: theme.bg,
       surface: '#1C1C1E',
     },
   };
@@ -64,7 +62,6 @@ export default function RootLayout() {
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: '设置' }} />
             <Stack.Screen name="course-detail" options={{ presentation: 'modal', headerShown: true, headerTitle: '课程详情' }} />
             <Stack.Screen name="import" options={{ presentation: 'modal', headerShown: true, headerTitle: '导入课程表' }} />
           </Stack>

@@ -121,9 +121,13 @@ const FETCH_SCRIPT = `
       for (var i = 0; i < tables.length; i++) {
         try {
           var txt = tables[i].innerText || '';
-          if (!/星期|周[一二三四五六日天]/.test(txt)) continue;
+          if (!/星期/.test(txt)) continue;
           if (!/课程|教师|教室|kcmc|jsxm|jsmc/.test(txt)) continue;
           if (tables[i].querySelectorAll('tr').length < 4) continue;
+          // 课表特征: 表头含"节次/时间"（排除实践课记录等字段列表型表格）
+          var firstRow = tables[i].querySelector('tr');
+          var headerTxt = firstRow ? (firstRow.innerText || '') : '';
+          if (!/节次|时间|上课/.test(headerTxt)) continue;
           var html = tables[i].outerHTML;
           if (html && html.length > 500 && html.length < 200000) return html;
         } catch(e4) {}

@@ -10,6 +10,7 @@ import { TimetableGrid } from '../../src/features/timetable/components/Timetable
 import {
   isSemesterStarted, getTodayDateLabel, getStartDateLabel, getWeekDayDates, getDaysUntil,
 } from '../../src/shared/utils/time';
+import { getThemePreset, THEME_PRESETS, THEME_PRESET_ORDER } from '../../src/shared/constants/theme';
 import type { Course } from '../../src/shared/types';
 
 export default function HomeScreen() {
@@ -18,8 +19,9 @@ export default function HomeScreen() {
     courses, currentWeek, loaded, init, setWeek, settings, semesterStart, setSemesterStart, updateSettings,
   } = useTimetable();
   const showWeekends = settings?.showWeekends ?? true;
-  const themeColor = settings?.themeColor || '#4A90D9';
-  const isDark = settings?.themeMode === 'dark';
+  const theme = getThemePreset(settings?.themeMode);
+  const themeColor = theme.accent;
+  const isDark = theme.mode === 'dark';
   const periodTimes = settings?.periodTimes ?? [];
 
   // 就近编辑状态
@@ -33,13 +35,13 @@ export default function HomeScreen() {
 
   if (!loaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDark ? '#1C1C1E' : '#fff' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }}>
         <ActivityIndicator size="large" color={themeColor} />
       </View>
     );
   }
 
-  const bg = isDark ? '#1C1C1E' : '#fff';
+  const bg = theme.bg;
   const started = isSemesterStarted(semesterStart);
   const todayLabel = getTodayDateLabel();
   const startLabel = getStartDateLabel(semesterStart);
@@ -68,11 +70,11 @@ export default function HomeScreen() {
   };
 
   const sheetBg = isDark ? '#2C2C2E' : '#fff';
-  const sheetText = isDark ? '#eee' : '#333';
+  const sheetText = theme.text;
 
   return (
     <View style={{ flex: 1, backgroundColor: bg }}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={bg} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.headerBg} />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <WeekHeader
           currentWeek={currentWeek}
@@ -83,7 +85,7 @@ export default function HomeScreen() {
           todayLabel={todayLabel}
           daysUntil={daysUntil}
           dayDates={dayDates}
-          isDark={isDark}
+          theme={theme}
           onPrev={() => setWeek(Math.max(1, currentWeek - 1))}
           onNext={() => setWeek(currentWeek + 1)}
           onGear={() => setMenuVisible(true)}
@@ -92,7 +94,7 @@ export default function HomeScreen() {
         {isEmpty ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 32, marginBottom: 12 }}>📅</Text>
-            <Text style={{ fontSize: 15, color: '#999' }}>本周没有课程</Text>
+            <Text style={{ fontSize: 15, color: theme.sub }}>本周没有课程</Text>
           </View>
         ) : (
           <TimetableGrid
@@ -101,7 +103,7 @@ export default function HomeScreen() {
             showWeekends={showWeekends}
             periodTimes={periodTimes}
             semesterStarted={started}
-            isDark={isDark}
+            theme={theme}
             onCoursePress={(c: Course) => router.push({ pathname: '/course-detail', params: { id: c.id } })}
             onEmptyPress={(day: number, period: number) =>
               router.push({ pathname: '/course/add', params: { dayOfWeek: String(day), startPeriod: String(period), endPeriod: String(period) } })
@@ -111,7 +113,7 @@ export default function HomeScreen() {
         )}
       </SafeAreaView>
 
-      {/* ⋮ 菜单：高频开关 + 学期日期 */}
+      {/* ⚙️ 呼出栏：主题/开关/学期日期/导入 */}
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
         <TouchableOpacity
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
@@ -119,7 +121,30 @@ export default function HomeScreen() {
           onPress={() => setMenuVisible(false)}
         >
           <View style={{ backgroundColor: sheetBg, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, paddingBottom: 32 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: sheetText, marginBottom: 12 }}>快捷设置</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: sheetText, marginBottom: 12 }}>设置</Text>
+
+            {/* 主题 */}
+            <Text style={{ fontSize: 13, color: theme.sub, marginBottom: 8 }}>主题</Text>
+            <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+              {THEME_PRESET_ORDER.map(mode => {
+                const p = THEME_PRESETS[mode];
+                const selected = theme.mode === mode;
+                return (
+                  <TouchableOpacity
+                    key={mode}
+                    onPress={() => updateSettings({ themeMode: mode })}
+                    style={{
+                      width: 40, height: 40, borderRadius: 20, backgroundColor: p.headerBg,
+                      alignItems: 'center', justifyContent: 'center',
+                      borderWidth: selected ? 2.5 : 1,
+                      borderColor: selected ? '#333' : (isDark ? '#555' : '#ddd'),
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: p.headerText, fontWeight: '700' }}>{p.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}>
               <Text style={{ fontSize: 15, color: sheetText }}>深色模式</Text>
@@ -138,7 +163,7 @@ export default function HomeScreen() {
               />
             </View>
 
-            <Text style={{ fontSize: 13, color: isDark ? '#888' : '#666', marginTop: 10, marginBottom: 4 }}>学期起始日期</Text>
+            <Text style={{ fontSize: 13, color: theme.sub, marginTop: 10, marginBottom: 4 }}>学期起始日期</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <TextInput
                 value={startInput}
@@ -157,15 +182,8 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* 完整入口 */}
+            {/* 导入入口 */}
             <View style={{ height: 1, backgroundColor: isDark ? '#3A3A3C' : '#eee', marginVertical: 14 }} />
-            <TouchableOpacity
-              onPress={() => { setMenuVisible(false); router.push('/settings'); }}
-              style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}
-            >
-              <Text style={{ fontSize: 15, color: sheetText }}>⚙️ 完整设置</Text>
-              <Text style={{ marginLeft: 'auto', fontSize: 15, color: '#ccc' }}>›</Text>
-            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => { setMenuVisible(false); router.push('/import'); }}
               style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}
@@ -188,7 +206,7 @@ export default function HomeScreen() {
             <Text style={{ fontSize: 16, fontWeight: '700', color: sheetText, marginBottom: 4 }}>
               第 {timeEditIdx !== null ? timeEditIdx + 1 : ''} 节上课时间
             </Text>
-            <Text style={{ fontSize: 12, color: isDark ? '#888' : '#999', marginBottom: 10 }}>格式 HH:MM-HH:MM，例如 08:00-08:45</Text>
+            <Text style={{ fontSize: 12, color: theme.sub, marginBottom: 10 }}>格式 HH:MM-HH:MM，例如 08:00-08:45</Text>
             <TextInput
               value={timeEditVal}
               onChangeText={setTimeEditVal}
