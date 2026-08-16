@@ -2,7 +2,7 @@
   "expo": {
     "name": "课程表",
     "slug": "CourseTable",
-    "version": "1.0.0",
+    "version": "2.9.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
