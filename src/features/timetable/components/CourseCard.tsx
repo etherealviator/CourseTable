@@ -34,20 +34,15 @@ export function CourseCard({ course, unitH, span, dimmed = false, onPress }: Pro
       onPress={() => onPress(course)}
       onLongPress={showFullInfo}
       delayLongPress={300}
-      activeOpacity={0.7}
+      activeOpacity={0.6}
       style={{
         flex: 1,
-        backgroundColor: dimmed ? '#fafafa' : '#fff',
-        borderRadius: 6,
+        backgroundColor: 'transparent',
+        borderRadius: 4,
         marginHorizontal: 1,
         marginVertical: 1,
         borderLeftWidth: 3,
         borderLeftColor: dimmed ? '#d0d0d0' : course.color,
-        elevation: dimmed ? 0 : 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 2,
         padding: 5,
         justifyContent: 'flex-start',
         opacity: dimmed ? 0.55 : 1,

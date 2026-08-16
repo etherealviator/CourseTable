@@ -4,8 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTimetable } from '../../src/features/timetable/store';
 
-const THEME_COLORS = ['#4A90D9', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'];
-
 export default function SettingsScreen() {
   const router = useRouter();
   const { semesterStart, settings, setSemesterStart, updateSettings } = useTimetable();
@@ -43,30 +41,6 @@ export default function SettingsScreen() {
             <Row label="深色模式" value={settings.themeMode === 'dark'} onChange={(v) => updateSettings({ themeMode: v ? 'dark' : 'light' })} themeColor={themeColor} />
             <View style={{ height: 1, backgroundColor: '#e8e8e8', marginHorizontal: 16 }} />
             <Row label="显示周六日" value={settings.showWeekends} onChange={(v) => updateSettings({ showWeekends: v })} themeColor={themeColor} />
-          </View>
-
-          {/* 主题色 */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: '#666', marginBottom: 10 }}>主题色</Text>
-            <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
-              {THEME_COLORS.map(c => {
-                const selected = themeColor === c;
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={() => updateSettings({ themeColor: c })}
-                    style={{
-                      width: 36, height: 36, borderRadius: 18, backgroundColor: c,
-                      alignItems: 'center', justifyContent: 'center',
-                      borderWidth: selected ? 2.5 : 1,
-                      borderColor: selected ? '#333' : 'transparent',
-                    }}
-                  >
-                    {selected && <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>✓</Text>}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
           </View>
 
           {/* 导入入口 */}

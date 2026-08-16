@@ -31,29 +31,38 @@ export function WeekHeader({
 
   return (
     <View style={{ backgroundColor: bg, paddingTop: 4, paddingBottom: 6 }}>
-      {/* 顶部：周数 + 日期 + 右上角操作 */}
+      {/* 顶部：左上角学期/日期 · 中间周切换 · 右上角操作 */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6 }}>
-        <TouchableOpacity onPress={onPrev} hitSlop={12} style={{ paddingHorizontal: 4 }}>
-          <Text style={{ fontSize: 16, color: '#ccc' }}>‹</Text>
-        </TouchableOpacity>
-
-        <View style={{ alignItems: 'center' }}>
+        {/* 左上角：学期状态 + 日期 */}
+        <View style={{ flex: 1, alignItems: 'flex-start' }}>
           {semesterStarted ? (
             <>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: titleColor, letterSpacing: 0.5 }}>
-                第 {currentWeek} 周<Text style={{ fontSize: 11, color: '#aaa' }}> / {totalWeeks}</Text>
-              </Text>
-              <Text style={{ fontSize: 10, color: subColor, marginTop: 1 }}>{todayLabel}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: titleColor, letterSpacing: 0.5 }}>{todayLabel}</Text>
+              <Text style={{ fontSize: 10, color: subColor, marginTop: 1 }}>第 {currentWeek} 周 / {totalWeeks}</Text>
             </>
           ) : (
             <>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#E8590C', letterSpacing: 0.5 }}>学期尚未开始</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#E8590C', letterSpacing: 0.5 }}>学期尚未开始</Text>
               <Text style={{ fontSize: 10, color: subColor, marginTop: 1 }}>{startLabel}开学 · 还有 {daysUntil} 天</Text>
             </>
           )}
         </View>
 
+        {/* 中间：周切换（‹ 第X周 ›） */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={onPrev} hitSlop={12} style={{ paddingHorizontal: 10 }}>
+            <Text style={{ fontSize: 18, color: isDark ? '#888' : '#ccc' }}>‹</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: isDark ? '#eee' : '#333', minWidth: 56, textAlign: 'center' }}>
+            第 {currentWeek} 周
+          </Text>
+          <TouchableOpacity onPress={onNext} hitSlop={12} style={{ paddingHorizontal: 10 }}>
+            <Text style={{ fontSize: 18, color: isDark ? '#888' : '#ccc' }}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 右上角 */}
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
           <TouchableOpacity onPress={onMenu} hitSlop={12} style={{ paddingHorizontal: 8 }}>
             <Text style={{ fontSize: 18, color: isDark ? '#aaa' : '#666', fontWeight: '700' }}>⋮</Text>
           </TouchableOpacity>
